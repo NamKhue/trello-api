@@ -1,32 +1,48 @@
-/**
- * Updated by trungquandev.com's author on August 17 2023
- * YouTube: https://youtube.com/@trungquandev
- * "A bit of fragrance clings to the hand that gives flowers!"
- */
 
 import express from 'express'
-import { mapOrder } from '~/utils/sorts.js'
+import exitHook from 'async-exit-hook'
+import { env } from '~/config/environment'
 
-const app = express()
+import { CONNECT_DB, CLOSE_DB, GET_DB } from '~/config/mongodb'
 
-const hostname = 'localhost'
-const port = 8017
 
-app.get('/', (req, res) => {
-  // Test Absolute import mapOrder
-  console.log(mapOrder(
-    [ { id: 'id-1', name: 'One' },
-      { id: 'id-2', name: 'Two' },
-      { id: 'id-3', name: 'Three' },
-      { id: 'id-4', name: 'Four' },
-      { id: 'id-5', name: 'Five' } ],
-    ['id-5', 'id-4', 'id-2', 'id-3', 'id-1'],
-    'id'
-  ))
-  res.end('<h1>Hello World!</h1><hr>')
-})
+const START_SERVER = () => {
+  const app = express()
 
-app.listen(port, hostname, () => {
-  // eslint-disable-next-line no-console
-  console.log(`Hello Trung Quan Dev, I am running at http://${ hostname }:${ port }/`)
-})
+  app.get('/', async (req, res) => {
+    // console.log(await GET_DB().listCollections().toArray())
+    res.end('<h1>Hello World!</h1><hr>')
+  })
+
+  app.listen(env.APP_PORT, env.APP_HOST, () => {
+    // eslint-disable-next-line no-console
+    console.log(`Hello im ${env.AUTHOR}, I am running at http://${ env.APP_HOST }:${ env.APP_PORT }/`)
+  })
+
+  // clean up trc khi dừng server
+  exitHook(() => CLOSE_DB())
+}
+
+// chỉ khi kết nối thành công tới db thì mới start server từ phía back-end lên
+(async () => {
+  try {
+    console.log('connecting to mongoDB cloud atlas')
+    await CONNECT_DB()
+
+    console.log('connected to mongoDB cloud atlas')
+    
+    // khởi động server back-end sau khi connect DB thành công
+    START_SERVER()
+  } catch (error) {
+    console.error(error)
+    process.exit(0)
+  }
+})()
+
+// CONNECT_DB()
+//   .then(() => console.log('connected to mongoDB cloud atlas'))
+//   .then(() => START_SERVER())
+//   .catch(error => {
+//     console.error(error)
+//     process.exit(0)
+//   })
