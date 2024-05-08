@@ -14,8 +14,11 @@ module.exports = {
   plugins: [],
   rules: {
     // Common
+    'react/prop-types': 0,
+    'no-useless-catch': 0,
+
     // 'no-console': 1,
-    'no-console': 'false',
+    // 'no-console': 'false',
     'no-extra-boolean-cast': 0,
     'no-lonely-if': 1,
     'no-unused-vars': 1,
