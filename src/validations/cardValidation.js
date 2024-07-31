@@ -1,58 +1,73 @@
-import Joi from 'joi'
-import { StatusCodes } from 'http-status-codes'
+import Joi from "joi";
+import { StatusCodes } from "http-status-codes";
 
-import ApiError from '~/utils/ApiError'
-import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from '~/utils/validators'
+import ApiError from "~/utils/ApiError";
+import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from "~/utils/validators";
 
 const createNew = async (req, res, next) => {
   const correctCondition = Joi.object({
-    boardId: Joi.string().required().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
-    columnId: Joi.string().required().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
-    title: Joi.string().required().min(3).max(50).trim().strict()
-  })
+    boardId: Joi.string()
+      .required()
+      .pattern(OBJECT_ID_RULE)
+      .message(OBJECT_ID_RULE_MESSAGE),
+    columnId: Joi.string()
+      .required()
+      .pattern(OBJECT_ID_RULE)
+      .message(OBJECT_ID_RULE_MESSAGE),
+    title: Joi.string().required().min(3).max(50).trim().strict(),
+  });
 
   try {
-    await correctCondition.validateAsync(req.body, { abortEarly: false })
+    await correctCondition.validateAsync(req.body, { abortEarly: false });
 
-    next()
+    next();
   } catch (error) {
-    next(new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, new Error(error).message))
+    next(
+      new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, new Error(error).message)
+    );
   }
-}
+};
 
 const deleteItem = async (req, res, next) => {
   const correctCondition = Joi.object({
-    id: Joi.string().required().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE)
-  })
+    id: Joi.string()
+      .required()
+      .pattern(OBJECT_ID_RULE)
+      .message(OBJECT_ID_RULE_MESSAGE),
+  });
 
   try {
-    await correctCondition.validateAsync(req.params)
+    await correctCondition.validateAsync(req.params);
 
-    next()
+    next();
   } catch (error) {
-    next(new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, new Error(error).message))
+    next(
+      new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, new Error(error).message)
+    );
   }
-}
+};
 
-const editCard = async (req, res, next) => {
+const updateCard = async (req, res, next) => {
   const correctCondition = Joi.object({
-    title: Joi.string().min(3).max(50).trim().strict()
-  })
+    title: Joi.string().min(3).max(50).trim().strict(),
+  });
 
   try {
     await correctCondition.validateAsync(req.body, {
       abortEarly: false,
-      allowUnknown: true
-    })
+      allowUnknown: true,
+    });
 
-    next()
+    next();
   } catch (error) {
-    next(new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, new Error(error).message))
+    next(
+      new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, new Error(error).message)
+    );
   }
-}
+};
 
 export const cardValidation = {
   createNew,
   deleteItem,
-  editCard
-}
+  updateCard,
+};

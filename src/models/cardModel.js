@@ -20,9 +20,25 @@ const CARD_COLLECTION_SCHEMA = Joi.object({
     .message(OBJECT_ID_RULE_MESSAGE),
 
   title: Joi.string().required().min(3).max(50).trim().strict(),
-  description: Joi.string().optional(),
+  description: Joi.string().default(""),
 
-  createdAt: Joi.date().timestamp("javascript").default(Date.now),
+  status: Joi.string().default(""),
+  statusTextColor: Joi.string().default(""),
+  statusBgColor: Joi.string().default(""),
+
+  priority: Joi.string().default(""),
+  priorityTextColor: Joi.string().default(""),
+  priorityBgColor: Joi.string().default(""),
+
+  deadlineAt: Joi.string().default(""),
+
+  memberIds: Joi.array()
+    .items(Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE))
+    .default([]),
+
+  createdAt: Joi.date()
+    .timestamp("javascript")
+    .default(() => Date.now()),
   updatedAt: Joi.date().timestamp("javascript").default(null),
   _destroy: Joi.boolean().default(false),
 });
@@ -140,7 +156,7 @@ const deleteOneById = async (cardId) => {
   }
 };
 
-const editCard = async (cardId, updateData) => {
+const updateCard = async (cardId, updateData) => {
   try {
     // lọc ra những field khong được phép cập nhật
     Object.keys(updateData).forEach((fieldName) => {
@@ -193,5 +209,5 @@ export const cardModel = {
   update,
   deleteManyByColumnId,
   deleteOneById,
-  editCard,
+  updateCard,
 };

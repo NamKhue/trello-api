@@ -37,7 +37,7 @@ const deleteItem = async (cardId) => {
     // console.log('targetCard:', targetCard)
 
     if (!targetCard) {
-      throw new ApiError(StatusCodes.NOT_FOUND, "Card not found");
+      throw new ApiError(StatusCodes.NOT_FOUND, "Card is not found");
     }
 
     // xóa card
@@ -52,7 +52,7 @@ const deleteItem = async (cardId) => {
   }
 };
 
-const editCard = async (cardId, reqBody) => {
+const updateCard = async (cardId, reqBody) => {
   try {
     const updateData = {
       ...reqBody,
@@ -60,7 +60,7 @@ const editCard = async (cardId, reqBody) => {
     };
 
     // const updatedCard =
-    await cardModel.editCard(cardId, updateData);
+    await cardModel.updateCard(cardId, updateData);
 
     return { modifyCardResult: "Card has been modified successfully!" };
   } catch (error) {
@@ -71,5 +71,5 @@ const editCard = async (cardId, reqBody) => {
 export const cardService = {
   createNew,
   deleteItem,
-  editCard,
+  updateCard,
 };
