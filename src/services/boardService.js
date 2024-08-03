@@ -2,10 +2,21 @@ import { StatusCodes } from "http-status-codes";
 import { cloneDeep } from "lodash";
 
 import { slugify } from "~/utils/formatters";
-import { boardModel } from "~/models/boardModel";
 import ApiError from "~/utils/ApiError";
+
+import { boardModel } from "~/models/boardModel";
 import { columnModel } from "~/models/columnModel";
 import { cardModel } from "~/models/cardModel";
+
+const getAllBoards = async () => {
+  // lấy dữ liệu của toàn bộ các bảng
+  try {
+    const allBoards = await boardModel.getAllBoards();
+    return allBoards;
+  } catch (error) {
+    throw error;
+  }
+};
 
 const createNew = async (reqBody) => {
   try {
@@ -82,9 +93,11 @@ const update = async (boardId, reqBody) => {
       updatedAt: Date.now(),
     };
 
-    const updatedBoard = await boardModel.update(boardId, updateData);
+    // const updatedBoard = await boardModel.update(boardId, updateData);
+    // return updatedBoard;
 
-    return updatedBoard;
+    await boardModel.update(boardId, updateData);
+    return { modifyBoardResult: "Board has been modified successfully!" };
   } catch (error) {
     throw error;
   }
@@ -118,6 +131,7 @@ const moveCardToDifferentColumn = async (reqBody) => {
 };
 
 export const boardService = {
+  getAllBoards,
   createNew,
   getDetails,
   update,
