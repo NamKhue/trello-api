@@ -7,13 +7,10 @@ import { boardModel } from "~/models/boardModel";
 import { cardModel } from "~/models/cardModel";
 import { columnModel } from "~/models/columnModel";
 
-const createNew = async (reqBody) => {
+const createNew = async (columnData) => {
   try {
-    const newColumn = {
-      ...reqBody,
-    };
+    const createdColumn = await columnModel.createNew(columnData);
 
-    const createdColumn = await columnModel.createNew(newColumn);
     const getNewColumn = await columnModel.findOneById(
       createdColumn.insertedId.toString()
     );
@@ -54,7 +51,7 @@ const deleteItem = async (columnId) => {
     // console.log('targetColumn:', targetColumn)
 
     if (!targetColumn) {
-      throw new ApiError(StatusCodes.NOT_FOUND, "Column not found");
+      throw new ApiError(StatusCodes.NOT_FOUND, "Column is not found");
     }
 
     // tương lai xóa nhiều
@@ -70,7 +67,7 @@ const deleteItem = async (columnId) => {
 
     return {
       deleteResult:
-        "Column and all cards of this column have been deleted successfully!",
+        "Column and all cards of this column have been removed successfully!",
     };
   } catch (error) {
     throw error;

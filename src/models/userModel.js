@@ -2,7 +2,6 @@ import Joi from "joi";
 import { ObjectId } from "mongodb";
 
 import { GET_DB } from "~/config/mongodb";
-import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from "~/utils/validators";
 
 const INVALID_UPDATE_FIELDS = ["_id", "createdAt", "email"];
 
@@ -85,6 +84,8 @@ const update = async (userId, updateData) => {
       }
     });
 
+    updateData = { ...updateData, updatedAt: Date.now() };
+
     const result = await GET_DB()
       .collection(USER_COLLECTION_NAME)
       .findOneAndUpdate(
@@ -102,6 +103,8 @@ const update = async (userId, updateData) => {
 };
 
 export const userModel = {
+  USER_COLLECTION_NAME,
+  USER_COLLECTION_SCHEMA,
   getAllUsers,
   findOneById,
   findOneByEmail,

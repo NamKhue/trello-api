@@ -31,6 +31,25 @@ const createNew = async (reqBody) => {
   }
 };
 
+const updateCard = async (cardId, reqBody) => {
+  try {
+    const updateData = {
+      ...reqBody,
+      members: reqBody.members.map((member) => {
+        return { ...member, joinedAt: Date.now(), updatedAt: null };
+      }),
+      updatedAt: Date.now(),
+    };
+
+    // const updatedCard =
+    await cardModel.updateCard(cardId, updateData);
+
+    return { modifyCardResult: "Card has been modified successfully!" };
+  } catch (error) {
+    throw error;
+  }
+};
+
 const deleteItem = async (cardId) => {
   try {
     const targetCard = await cardModel.findOneById(cardId);
@@ -46,23 +65,7 @@ const deleteItem = async (cardId) => {
     // xóa cardId trong mảng cardOrderIds của board chứa nó
     await columnModel.pullCardOrderIds(targetCard);
 
-    return { deleteResult: "This Card have been deleted successfully!" };
-  } catch (error) {
-    throw error;
-  }
-};
-
-const updateCard = async (cardId, reqBody) => {
-  try {
-    const updateData = {
-      ...reqBody,
-      updatedAt: Date.now(),
-    };
-
-    // const updatedCard =
-    await cardModel.updateCard(cardId, updateData);
-
-    return { modifyCardResult: "Card has been modified successfully!" };
+    return { deleteResult: "This card have been deleted successfully!" };
   } catch (error) {
     throw error;
   }
@@ -70,6 +73,6 @@ const updateCard = async (cardId, reqBody) => {
 
 export const cardService = {
   createNew,
-  deleteItem,
   updateCard,
+  deleteItem,
 };

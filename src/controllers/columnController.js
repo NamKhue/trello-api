@@ -1,42 +1,42 @@
-import { StatusCodes } from 'http-status-codes'
+import { StatusCodes } from "http-status-codes";
 
-import { columnService } from '~/services/columnService'
+import { columnService } from "~/services/columnService";
 
 const createNew = async (req, res, next) => {
   try {
-    const createdNewColumn = await columnService.createNew(req.body)
+    const createdNewColumn = await columnService.createNew(req.body);
 
-    res.status(StatusCodes.CREATED).json(createdNewColumn)
-    
+    res.status(StatusCodes.CREATED).json(createdNewColumn);
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
 
 const update = async (req, res, next) => {
   try {
-    const columnId = req.params.id
-    const updatedColumn = await columnService.update(columnId, req.body)
+    const columnId = req.params.id;
 
-    res.status(StatusCodes.OK).json(updatedColumn)
+    const updatedColumn = await columnService.update(columnId, req.body);
+
+    res.status(StatusCodes.OK).json(updatedColumn);
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
 
 const deleteItem = async (req, res, next) => {
   try {
-    const columnId = req.params.id
-    const updatedColumn = await columnService.deleteItem(columnId)
+    const columnId = req.params.id;
+    const updatedColumn = await columnService.deleteItem(columnId);
 
-    res.status(StatusCodes.OK).json(updatedColumn)
+    res.status(StatusCodes.OK).json(updatedColumn);
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
 
 export const columnController = {
   createNew,
   update,
-  deleteItem
-}
+  deleteItem,
+};

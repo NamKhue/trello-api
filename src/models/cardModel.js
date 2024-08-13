@@ -32,8 +32,23 @@ const CARD_COLLECTION_SCHEMA = Joi.object({
 
   deadlineAt: Joi.string().default(""),
 
-  memberIds: Joi.array()
-    .items(Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE))
+  // memberIds: Joi.array()
+  //   .items(Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE))
+  //   .default([]),
+
+  members: Joi.array()
+    .items(
+      Joi.object({
+        userId: Joi.string()
+          .required()
+          .pattern(OBJECT_ID_RULE)
+          .message(OBJECT_ID_RULE_MESSAGE),
+        username: Joi.string().min(3).max(30).required(),
+        email: Joi.string().email().required(),
+        joinedAt: Joi.date().timestamp("javascript").default(null),
+        updatedAt: Joi.date().timestamp("javascript").default(null),
+      })
+    )
     .default([]),
 
   createdAt: Joi.date()
@@ -124,38 +139,6 @@ const update = async (cardId, updateData) => {
   }
 };
 
-const deleteManyByColumnId = async (columnId) => {
-  try {
-    const result = await GET_DB()
-      .collection(CARD_COLLECTION_NAME)
-      .deleteMany({
-        columnId: new ObjectId(columnId),
-      });
-
-    // console.log('deleteManyByColumnIdResult:', result)
-
-    return result;
-  } catch (error) {
-    throw new Error(error);
-  }
-};
-
-const deleteOneById = async (cardId) => {
-  try {
-    const result = await GET_DB()
-      .collection(CARD_COLLECTION_NAME)
-      .deleteOne({
-        _id: new ObjectId(cardId),
-      });
-
-    // console.log('deleteOneByIdResult:', result)
-
-    return result;
-  } catch (error) {
-    throw new Error(error);
-  }
-};
-
 const updateCard = async (cardId, updateData) => {
   try {
     // lọc ra những field khong được phép cập nhật
@@ -170,6 +153,12 @@ const updateCard = async (cardId, updateData) => {
     // đối với những dữ liệu liên quan đến ObjectId, thì biến đổi ở đây
     if (updateData.columnId) {
       updateData.columnId = new ObjectId(updateData.columnId);
+    }
+    if (updateData.members) {
+      updateData.members = updateData.members.map((member) => {
+        member.userId = new ObjectId(member.userId);
+        return member;
+      });
     }
     // if (updateData.cardOrderIds) {
     //   updateData.cardOrderIds = updateData.cardOrderIds.map(
@@ -201,13 +190,45 @@ const updateCard = async (cardId, updateData) => {
   }
 };
 
+const deleteOneById = async (cardId) => {
+  try {
+    const result = await GET_DB()
+      .collection(CARD_COLLECTION_NAME)
+      .deleteOne({
+        _id: new ObjectId(cardId),
+      });
+
+    // console.log('deleteOneByIdResult:', result)
+
+    return result;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+const deleteManyByColumnId = async (columnId) => {
+  try {
+    const result = await GET_DB()
+      .collection(CARD_COLLECTION_NAME)
+      .deleteMany({
+        columnId: new ObjectId(columnId),
+      });
+
+    // console.log('deleteManyByColumnIdResult:', result)
+
+    return result;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
 export const cardModel = {
   CARD_COLLECTION_NAME,
   CARD_COLLECTION_SCHEMA,
   createNew,
   findOneById,
   update,
-  deleteManyByColumnId,
-  deleteOneById,
   updateCard,
+  deleteOneById,
+  deleteManyByColumnId,
 };

@@ -2,11 +2,19 @@ import Joi from "joi";
 import { StatusCodes } from "http-status-codes";
 
 import ApiError from "~/utils/ApiError";
+
 // import { BOARD_TYPES } from "~/utils/constants";
+// import { ROLE_TYPES } from "~/utils/constants";
+
 import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from "~/utils/validators";
 
+// ================================================================================================================
 const createNew = async (req, res, next) => {
   const correctCondition = Joi.object({
+    // userId: Joi.string()
+    //   .required()
+    //   .pattern(OBJECT_ID_RULE)
+    //   .message(OBJECT_ID_RULE_MESSAGE),
     title: Joi.string().required().min(3).max(50).trim().strict().messages({
       "any.required": "Title is required",
       "string.empty": "Title is not allowed to be empty",
@@ -18,6 +26,9 @@ const createNew = async (req, res, next) => {
     // type: Joi.string()
     //   .valid(BOARD_TYPES.PUBLIC, BOARD_TYPES.PRIVATE)
     //   .required(),
+
+    // description: Joi.string().min(3).max(255).trim().strict(),
+    // role: Joi.string().valid(ROLE_TYPES.OWNER, ROLE_TYPES.MEMBER).default(""),
   });
 
   try {
@@ -36,6 +47,7 @@ const createNew = async (req, res, next) => {
   }
 };
 
+// ================================================================================================================
 const update = async (req, res, next) => {
   // khong cần hàm required() khi update data
   const correctCondition = Joi.object({
@@ -62,6 +74,7 @@ const update = async (req, res, next) => {
   }
 };
 
+// ================================================================================================================
 const moveCardToDifferentColumn = async (req, res, next) => {
   // khong cần hàm required() khi update data
   const correctCondition = Joi.object({

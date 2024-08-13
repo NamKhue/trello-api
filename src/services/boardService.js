@@ -8,26 +8,41 @@ import { boardModel } from "~/models/boardModel";
 import { columnModel } from "~/models/columnModel";
 import { cardModel } from "~/models/cardModel";
 
-const getAllBoards = async () => {
+// ================================================================================================================
+const getAllBoards = async (userId) => {
   // lấy dữ liệu của toàn bộ các bảng
   try {
-    const allBoards = await boardModel.getAllBoards();
+    const allBoards = await boardModel.getAllBoards(userId);
     return allBoards;
   } catch (error) {
     throw error;
   }
 };
 
-const createNew = async (reqBody) => {
+// ================================================================================================================
+const getCreatorBoards = async (userId) => {
+  // lấy dữ liệu của toàn bộ các bảng theo role 'creator' - ở giao diện sẽ là mục my board ở trang chủ
+  try {
+    const allBoards = await boardModel.getCreatorBoards(userId);
+    return allBoards;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// ================================================================================================================
+const createNew = async (userId, boardData) => {
   try {
     // xử lý logic data tùy đặc thù dự án
     const newBoard = {
-      ...reqBody,
-      slug: slugify(reqBody.title),
+      ...boardData,
+      slug: slugify(boardData.title),
+      userId: userId,
+      createdAt: Date.now(),
     };
 
     // gọi tới tầng model để xử lý lưu bản ghi newBoard vào DB
-    const createdBoard = await boardModel.createNew(newBoard);
+    const createdBoard = await boardModel.createNew(userId, newBoard);
 
     // lấy bản ghi board sau khi gọi
     const getNewBoard = await boardModel.findOneById(
@@ -45,12 +60,13 @@ const createNew = async (reqBody) => {
   }
 };
 
+// ================================================================================================================
 const getDetails = async (boardId) => {
   try {
     const board = await boardModel.getDetails(boardId);
 
     if (!board) {
-      throw new ApiError(StatusCodes.NOT_FOUND, "Board not found");
+      throw new ApiError(StatusCodes.NOT_FOUND, "Board is not found");
     }
 
     const resBoard = cloneDeep(board);
@@ -64,9 +80,6 @@ const getDetails = async (boardId) => {
       // column.cards = resBoard.cards.filter(
       //   (card) => card.columnId.toString() === column._id.toString()
       // );
-
-      // console.log("column._id ", column._id);
-
       // resBoard.cards.map((card) => {
       //   console.log("card.columnId ", card.columnId);
       // });
@@ -86,6 +99,34 @@ const getDetails = async (boardId) => {
   }
 };
 
+const getBoardById = async (userId, boardId) => {
+  // lấy dữ liệu của toàn bộ các bảng
+  try {
+    const board = await boardModel.getBoardById(userId, boardId);
+    // return board;
+
+    // api column and card then test after
+    if (!board) {
+      throw new ApiError(StatusCodes.NOT_FOUND, "Board not found");
+    }
+
+    const resBoard = cloneDeep(board);
+
+    resBoard.columns.forEach((column) => {
+      column.cards = resBoard.cards.filter((card) =>
+        card.columnId.equals(column._id)
+      );
+    });
+
+    delete resBoard.cards;
+
+    return resBoard;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// ================================================================================================================
 const update = async (boardId, reqBody) => {
   try {
     const updateData = {
@@ -103,6 +144,33 @@ const update = async (boardId, reqBody) => {
   }
 };
 
+const updateBoard = async (userId, boardId, reqBody) => {
+  try {
+    const updateData = {
+      ...reqBody,
+      updatedAt: Date.now(),
+    };
+
+    await boardModel.updateBoard(userId, boardId, updateData);
+    return { modifyBoardResult: "Board has been modified successfully!" };
+  } catch (error) {
+    return new Error(error);
+  }
+};
+
+// ================================================================================================================
+const deleteBoard = async (userId, boardId) => {
+  try {
+    await boardModel.deleteBoard(userId, boardId);
+    console.log(`here service`);
+
+    return { deleteBoardResult: "Board has been removed successfully!" };
+  } catch (error) {
+    return new Error(error);
+  }
+};
+
+// ================================================================================================================
 // di chuyển card từ col A sang col B
 const moveCardToDifferentColumn = async (reqBody) => {
   try {
@@ -124,7 +192,7 @@ const moveCardToDifferentColumn = async (reqBody) => {
       updatedAt: Date.now(),
     });
 
-    return { movingCardResult: "Moved cards successfully" };
+    return { movingCardResult: "Moved card successfully" };
   } catch (error) {
     throw error;
   }
@@ -132,8 +200,12 @@ const moveCardToDifferentColumn = async (reqBody) => {
 
 export const boardService = {
   getAllBoards,
+  getCreatorBoards,
   createNew,
   getDetails,
+  getBoardById,
   update,
+  updateBoard,
+  deleteBoard,
   moveCardToDifferentColumn,
 };

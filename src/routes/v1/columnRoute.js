@@ -1,14 +1,40 @@
 import express from "express";
 
+import { authenticateJWT } from "~/middlewares/authenticateJWT";
+import {
+  authorizeRoleBoardForBoardUser,
+  authorizeRoleColumn,
+} from "~/middlewares/authorizeRole";
+
+import { ROLE_TYPES } from "~/utils/constants";
+
 import { columnValidation } from "~/validations/columnValidation";
 import { columnController } from "~/controllers/columnController";
 
 const Router = express.Router();
 
-Router.route("/").post(columnValidation.createNew, columnController.createNew);
+Router.post(
+  "/",
+  authenticateJWT,
+  authorizeRoleBoardForBoardUser([ROLE_TYPES.CREATOR, ROLE_TYPES.OWNER]),
+  columnValidation.createNew,
+  columnController.createNew
+);
 
-Router.route("/:id")
-  .put(columnValidation.update, columnController.update)
-  .delete(columnValidation.deleteItem, columnController.deleteItem);
+Router.put(
+  "/:id",
+  authenticateJWT,
+  authorizeRoleColumn([ROLE_TYPES.CREATOR, ROLE_TYPES.OWNER]),
+  columnValidation.update,
+  columnController.update
+);
+
+Router.delete(
+  "/:id",
+  authenticateJWT,
+  authorizeRoleColumn([ROLE_TYPES.CREATOR, ROLE_TYPES.OWNER]),
+  columnValidation.deleteItem,
+  columnController.deleteItem
+);
 
 export const columnRoute = Router;
