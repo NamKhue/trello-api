@@ -5,7 +5,7 @@ import { userService } from "~/services/userService";
 const register = async (req, res, next) => {
   try {
     const createdUser = await userService.register(req.body);
-    res.status(StatusCodes.OK).json(createdUser);
+    res.status(StatusCodes.CREATED).json(createdUser);
   } catch (error) {
     next(error);
   }
@@ -13,8 +13,11 @@ const register = async (req, res, next) => {
 
 const login = async (req, res, next) => {
   try {
-    const token = await userService.authenticateUser(req.body);
-    res.json({ token });
+    // const token = await userService.authenticateUser(req.body);
+    // res.json({ token });
+
+    const loginData = await userService.authenticateUser(req.body);
+    res.status(StatusCodes.OK).json(loginData);
   } catch (error) {
     next(error);
   }
@@ -39,7 +42,7 @@ const getDetails = async (req, res, next) => {
     res.status(StatusCodes.OK).json(user);
   } catch (error) {
     console.error("Error getting user details:", error.message);
-    res.status(500).send("Internal server error");
+    next(error);
   }
 };
 

@@ -15,8 +15,9 @@ Router.route("/register").post(
 Router.route("/login").post(userValidation.validateEmail, userController.login);
 
 Router.route("/").get(userController.getAllUsers);
-Router.get("/:id", authenticateJWT, userController.getDetails).put(
-  "/:id",
+Router.get("/userInformation", authenticateJWT, userController.getDetails);
+Router.put(
+  "/modifyUserInfomartion",
   authenticateJWT,
   userValidation.validateUserUpdate,
   userController.updateUserDetails

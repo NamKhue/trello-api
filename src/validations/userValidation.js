@@ -57,7 +57,7 @@ const validateUserUpdate = async (req, res, next) => {
     });
 
     if (req.body.email) {
-      return new ApiError(
+      throw new ApiError(
         StatusCodes.UNPROCESSABLE_ENTITY,
         new Error({ message: "Email cannot be modified" }).message
       );

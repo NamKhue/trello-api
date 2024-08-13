@@ -3,6 +3,7 @@ import { StatusCodes } from "http-status-codes";
 
 import { userRoute } from "~/routes/v1/userRoute";
 import { boardRoute } from "~/routes/v1/boardRoute";
+import { boardUserRoute } from "~/routes/v1/boardUserRoute";
 import { columnRoute } from "~/routes/v1/columnRoute";
 import { cardRoute } from "~/routes/v1/cardRoute";
 
@@ -18,6 +19,9 @@ Router.use("/user", userRoute);
 
 // board APIs
 Router.use("/boards", boardRoute);
+
+// boardUsers APIs
+Router.use("/boardUsers", boardUserRoute);
 
 // columns APIs
 Router.use("/columns", columnRoute);

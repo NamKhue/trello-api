@@ -1,6 +1,9 @@
 import express from "express";
 import exitHook from "async-exit-hook";
 import cors from "cors";
+import { createServer } from "http";
+
+import setupSocketIO from "~/sockets/socket";
 
 import { corsOptions } from "~/config/cors";
 import { env } from "~/config/environment";
@@ -9,7 +12,10 @@ import { APIs_V1 } from "~/routes/v1";
 import { errorHandlingMiddleware } from "~/middlewares/errorHandlingMiddleware";
 
 const START_SERVER = () => {
+  // const app = express();
+
   const app = express();
+  const server = createServer(app);
 
   // xử lý CORS
   app.use(cors(corsOptions));
@@ -17,13 +23,16 @@ const START_SERVER = () => {
   // enable req.body json data
   app.use(express.json());
 
+  // Setup Socket.IO
+  setupSocketIO(server, corsOptions);
+
   // use APIs V1
   app.use("/v1", APIs_V1);
 
   // middleware handle errors
   app.use(errorHandlingMiddleware);
 
-  app.listen(env.APP_PORT, env.APP_HOST, () => {
+  server.listen(env.APP_PORT, env.APP_HOST, () => {
     console.log(
       `Hello im ${env.AUTHOR}, I am running at http://${env.APP_HOST}:${env.APP_PORT}/`
     );
