@@ -45,7 +45,7 @@ const update = async (columnId, reqBody) => {
   }
 };
 
-const deleteItem = async (columnId) => {
+const deleteColumnItem = async (columnId) => {
   try {
     const targetColumn = await columnModel.findOneById(columnId);
     // console.log('targetColumn:', targetColumn)
@@ -66,7 +66,7 @@ const deleteItem = async (columnId) => {
     await boardModel.pullColumnOrderIds(targetColumn);
 
     return {
-      deleteResult:
+      deleteColumnResult:
         "Column and all cards of this column have been removed successfully!",
     };
   } catch (error) {
@@ -77,5 +77,5 @@ const deleteItem = async (columnId) => {
 export const columnService = {
   createNew,
   update,
-  deleteItem,
+  deleteColumnItem,
 };

@@ -7,6 +7,9 @@ import ApiError from "~/utils/ApiError";
 import { boardModel } from "~/models/boardModel";
 import { columnModel } from "~/models/columnModel";
 import { cardModel } from "~/models/cardModel";
+import { notificationService } from "./notificationService";
+import { NOTIFICATION_CONSTANTS } from "~/utils/constants";
+import { boardUserService } from "./boardUserService";
 
 // ================================================================================================================
 const getAllBoards = async (userId) => {
@@ -99,10 +102,10 @@ const getDetails = async (boardId) => {
   }
 };
 
-const getBoardById = async (userId, boardId) => {
+const getBoardById = async (boardId) => {
   // lấy dữ liệu của toàn bộ các bảng
   try {
-    const board = await boardModel.getBoardById(userId, boardId);
+    const board = await boardModel.getBoardById(boardId);
     // return board;
 
     // api column and card then test after
@@ -161,10 +164,30 @@ const updateBoard = async (userId, boardId, reqBody) => {
 // ================================================================================================================
 const deleteBoard = async (userId, boardId) => {
   try {
+    // delete board
     await boardModel.deleteBoard(userId, boardId);
-    console.log(`here service`);
 
-    return { deleteBoardResult: "Board has been removed successfully!" };
+    // // find all members in board
+    // const listMembersInBoard = await boardUserService.getAllMembers(boardId);
+
+    // let listNotiDeleteBoard = [];
+
+    // for (const member of listMembersInBoard) {
+    //   // send the notification to that user
+    //   const notiDeleteBoard = await notificationService.createNotification({
+    //     actorId: userId,
+    //     impactResistantId: member.userId,
+    //     objectId: boardId,
+    //     type: NOTIFICATION_CONSTANTS.TYPE.DELETE,
+    //   });
+
+    //   listNotiDeleteBoard.push(notiDeleteBoard);
+    // }
+
+    // return {
+    //   deleteBoardResult: "Board has been removed successfully!",
+    //   listNotiDeleteBoard,
+    // };
   } catch (error) {
     return new Error(error);
   }

@@ -158,8 +158,8 @@ const createNew = async (creatorId, boardData) => {
     const validData = {
       ...value,
       userId: new ObjectId(creatorId),
-      createdAt: new Date(),
-      // updatedAt: new Date(),
+      createdAt: Date.now(),
+      // updatedAt: Date.now(),
       _destroy: false,
     };
 
@@ -227,7 +227,7 @@ const getDetails = async (id) => {
 };
 
 // new ver of get details of board
-const getBoardById = async (userId, boardId) => {
+const getBoardById = async (boardId) => {
   try {
     const board = await GET_DB()
       .collection(BOARD_COLLECTION_NAME)
@@ -272,6 +272,8 @@ const getBoardById = async (userId, boardId) => {
 // ================================================================================================================
 // purpose is find the created one to return result in service layer
 const findOneById = async (boardId) => {
+  boardId = boardId.toString();
+
   try {
     const result = await GET_DB()
       .collection(BOARD_COLLECTION_NAME)

@@ -1,8 +1,11 @@
+/* eslint-disable indent */
 import Joi from "joi";
 import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from "~/utils/validators";
 import { ObjectId } from "mongodb";
 
 import { GET_DB } from "~/config/mongodb";
+import { CARD_CONSTANTS } from "~/utils/constants";
+// import { notificationService } from "~/services/notificationService";
 
 // xác định những Fields mà chúng ta không muốn cho phép cập nhật trong hàm update()
 const INVALID_UPDATE_FIELDS = ["_id", "createdAt", "boardId"];
@@ -15,6 +18,10 @@ const CARD_COLLECTION_SCHEMA = Joi.object({
     .pattern(OBJECT_ID_RULE)
     .message(OBJECT_ID_RULE_MESSAGE),
   columnId: Joi.string()
+    .required()
+    .pattern(OBJECT_ID_RULE)
+    .message(OBJECT_ID_RULE_MESSAGE),
+  creatorId: Joi.string()
     .required()
     .pattern(OBJECT_ID_RULE)
     .message(OBJECT_ID_RULE_MESSAGE),
@@ -31,10 +38,15 @@ const CARD_COLLECTION_SCHEMA = Joi.object({
   priorityBgColor: Joi.string().default(""),
 
   deadlineAt: Joi.string().default(""),
-
-  // memberIds: Joi.array()
-  //   .items(Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE))
-  //   .default([]),
+  notifyBefore: Joi.number().integer().min(0).default(0),
+  notifyUnit: Joi.string()
+    .valid(
+      CARD_CONSTANTS.NOTIFY_UNIT.DAY,
+      CARD_CONSTANTS.NOTIFY_UNIT.HOUR,
+      CARD_CONSTANTS.NOTIFY_UNIT.MINUTE,
+      CARD_CONSTANTS.NOTIFY_UNIT.WEEK
+    )
+    .default(CARD_CONSTANTS.NOTIFY_UNIT.MINUTE),
 
   members: Joi.array()
     .items(
@@ -58,6 +70,7 @@ const CARD_COLLECTION_SCHEMA = Joi.object({
   _destroy: Joi.boolean().default(false),
 });
 
+// =============================================================================================================================
 const validateBeforeCreating = async (data) => {
   return await CARD_COLLECTION_SCHEMA.validateAsync(data, {
     abortEarly: false,
@@ -69,10 +82,11 @@ const createNew = async (data) => {
     const validData = await validateBeforeCreating(data);
 
     // biến đổi dữ liệu từ string sang objectId để lưu vào DB
-    const newCardToAdd = {
+    let newCardToAdd = {
       ...validData,
       boardId: new ObjectId(validData.boardId),
       columnId: new ObjectId(validData.columnId),
+      creatorId: new ObjectId(validData.creatorId),
     };
 
     const createdCard = await GET_DB()
@@ -85,6 +99,7 @@ const createNew = async (data) => {
   }
 };
 
+// =============================================================================================================================
 const findOneById = async (cardId) => {
   try {
     const result = await GET_DB()
@@ -99,6 +114,7 @@ const findOneById = async (cardId) => {
   }
 };
 
+// =============================================================================================================================
 const update = async (cardId, updateData) => {
   try {
     // lọc ra những field khong được phép cập nhật
@@ -138,6 +154,20 @@ const update = async (cardId, updateData) => {
     throw new Error(error);
   }
 };
+
+// const convertToMinutes = (value, unit) => {
+//   switch (unit) {
+//     case "hour":
+//       return value * 60;
+//     case "day":
+//       return value * 60 * 24;
+//     case "week":
+//       return value * 60 * 24 * 7;
+//     case "minute":
+//     default:
+//       return value;
+//   }
+// };
 
 const updateCard = async (cardId, updateData) => {
   try {
@@ -190,6 +220,58 @@ const updateCard = async (cardId, updateData) => {
   }
 };
 
+// =============================================================================================================================
+const addUserIntoCard = async (cardId, assigneeData) => {
+  try {
+    assigneeData = {
+      ...assigneeData,
+      userId: new ObjectId(assigneeData.userId),
+    };
+
+    const result = await GET_DB()
+      .collection(CARD_COLLECTION_NAME)
+      .updateOne(
+        { _id: new ObjectId(cardId) },
+        { $push: { members: assigneeData }, $set: { updatedAt: Date.now() } },
+        {
+          returnDocument: "after",
+        }
+      );
+
+    return result;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+// =============================================================================================================================
+const removeUserFromCard = async (cardId, assigneeData) => {
+  try {
+    assigneeData = {
+      ...assigneeData,
+      userId: new ObjectId(assigneeData.userId),
+    };
+
+    const result = await GET_DB()
+      .collection(CARD_COLLECTION_NAME)
+      .updateOne(
+        { _id: new ObjectId(cardId) },
+        {
+          $pull: { members: { userId: assigneeData.userId } },
+          $set: { updatedAt: Date.now() },
+        },
+        {
+          returnDocument: "after",
+        }
+      );
+
+    return result;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+// =============================================================================================================================
 const deleteOneById = async (cardId) => {
   try {
     const result = await GET_DB()
@@ -206,6 +288,7 @@ const deleteOneById = async (cardId) => {
   }
 };
 
+// =============================================================================================================================
 const deleteManyByColumnId = async (columnId) => {
   try {
     const result = await GET_DB()
@@ -229,6 +312,8 @@ export const cardModel = {
   findOneById,
   update,
   updateCard,
+  addUserIntoCard,
+  removeUserFromCard,
   deleteOneById,
   deleteManyByColumnId,
 };

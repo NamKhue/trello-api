@@ -1,6 +1,8 @@
 import { boardUserModel } from "~/models/boardUserModel";
-import { invitationModel } from "~/models/invitationModel";
-import { INVITATION_STATUS } from "~/utils/constants";
+
+import { NOTIFICATION_CONSTANTS } from "~/utils/constants";
+
+import { notificationService } from "./notificationService";
 
 // ================================================================================================================
 const getBoardsByOwnerRole = async (userId) => {
@@ -26,12 +28,7 @@ const getBoardsByMemberRole = async (userId) => {
 // ================================================================================================================
 const getAllMembers = async (boardId) => {
   try {
-    // gọi tới tầng model để xử lý lưu bản ghi newBoardUser vào DB
     const allMembers = await boardUserModel.getUserFromBoardUsers(boardId);
-
-    // const getNewBoardUser = await boardUserModel.findOneById(
-    //   createdBoard.insertedId.toString()
-    // );
 
     return allMembers;
   } catch (error) {
@@ -42,14 +39,12 @@ const getAllMembers = async (boardId) => {
 // ================================================================================================================
 const createBoardUser = async (boardId, userId, role) => {
   try {
-    // xử lý logic data tùy đặc thù dự án
     const newBoardUser = {
       boardId: boardId,
       userId: userId,
       role: role,
     };
 
-    // gọi tới tầng model để xử lý lưu bản ghi newBoardUser vào DB
     const createdBoard = await boardUserModel.createBoardUser(newBoardUser);
 
     const getNewBoardUser = await boardUserModel.findOneById(
@@ -77,41 +72,21 @@ const getRoleOfBoard = async (userId, boardId) => {
 };
 
 // ================================================================================================================
-const inviteUserToBoard = async (
-  pendingInvitationId,
-  inviterId,
-  inviteData
-) => {
-  try {
-    const createdInvitation = await boardUserModel.inviteUserToBoard(
-      inviterId,
-      inviteData
-    );
-
-    // Update the status of the invitation
-    await invitationModel.updatePendingInvitationStatus(
-      pendingInvitationId,
-      INVITATION_STATUS.ACCEPTED
-    );
-
-    const getNewInvitation = await boardUserModel.findOneById(
-      createdInvitation.insertedId.toString()
-    );
-
-    // gửi email, notification cho người dùng được mời khi tạo lời mời xong
-
-    return getNewInvitation;
-  } catch (error) {
-    throw error;
-  }
-};
-
-// ================================================================================================================
 const removeUserFromBoard = async (removerId, removeData) => {
   try {
+    // remove user from board
     await boardUserModel.removeUserFromBoard(removerId, removeData);
 
-    return { removeUserResult: "Successfully remove member!" };
+    // send the notification to that user
+    const newNoti = await notificationService.createNotification({
+      actorId: removerId,
+      impactResistantId: removeData.userId,
+      objectId: removeData.boardId,
+      type: NOTIFICATION_CONSTANTS.TYPE.REMOVE,
+      from: NOTIFICATION_CONSTANTS.FROM.BOARD,
+    });
+
+    return { removeUserResult: "Successfully remove member!", newNoti };
   } catch (error) {
     throw error;
   }
@@ -122,19 +97,32 @@ const changeUserRole = async (invokerId, roleChangeData) => {
   try {
     await boardUserModel.changeUserRole(invokerId, roleChangeData);
 
-    return { upgradedRoleUserResult: "Successfully upgraded role of member!" };
+    // send the notification to that user
+    const notiChangedRoleOfMember =
+      await notificationService.createNotification({
+        actorId: invokerId,
+        impactResistantId: roleChangeData.userId,
+        objectId: roleChangeData.boardId,
+        type: NOTIFICATION_CONSTANTS.TYPE.CHANGE_ROLE,
+        role: roleChangeData.role,
+      });
+
+    return {
+      changedRoleUserResult: "Successfully changed role of member.",
+      notiChangedRoleOfMember,
+    };
   } catch (error) {
     throw error;
   }
 };
 
+// ================================================================================================================
 export const boardUserService = {
   getBoardsByOwnerRole,
   getBoardsByMemberRole,
   getAllMembers,
   createBoardUser,
   getRoleOfBoard,
-  inviteUserToBoard,
   removeUserFromBoard,
   changeUserRole,
 };

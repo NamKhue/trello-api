@@ -3,13 +3,16 @@ import exitHook from "async-exit-hook";
 import cors from "cors";
 import { createServer } from "http";
 
-import setupSocketIO from "~/sockets/socket";
-
-import { corsOptions } from "~/config/cors";
 import { env } from "~/config/environment";
 import { CONNECT_DB, CLOSE_DB } from "~/config/mongodb";
+
+import { corsOptions } from "~/config/cors";
+
 import { APIs_V1 } from "~/routes/v1";
 import { errorHandlingMiddleware } from "~/middlewares/errorHandlingMiddleware";
+
+import { setupSocketIO } from "~/sockets/setupSocketIO";
+import { startCronJobs } from "~/utils/notify system/cron";
 
 const START_SERVER = () => {
   // const app = express();
@@ -24,10 +27,13 @@ const START_SERVER = () => {
   app.use(express.json());
 
   // Setup Socket.IO
-  setupSocketIO(server, corsOptions);
+  setupSocketIO(server);
 
   // use APIs V1
   app.use("/v1", APIs_V1);
+
+  // automatically popup notification about deadline
+  startCronJobs();
 
   // middleware handle errors
   app.use(errorHandlingMiddleware);

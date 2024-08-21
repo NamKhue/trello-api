@@ -48,7 +48,7 @@ const update = async (req, res, next) => {
   }
 };
 
-const deleteItem = async (req, res, next) => {
+const deleteColumnItem = async (req, res, next) => {
   const correctCondition = Joi.object({
     id: Joi.string()
       .required()
@@ -70,5 +70,5 @@ const deleteItem = async (req, res, next) => {
 export const columnValidation = {
   createNew,
   update,
-  deleteItem,
+  deleteColumnItem,
 };

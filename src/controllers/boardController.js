@@ -71,11 +71,11 @@ const getDetails = async (req, res, next) => {
 };
 
 const getBoardById = async (req, res, next) => {
-  const { userId } = req.user;
+  // const { userId } = req.user;
   const { id } = req.params;
 
   try {
-    const board = await boardService.getBoardById(userId, id);
+    const board = await boardService.getBoardById(id);
 
     if (!board) {
       return res

@@ -28,7 +28,7 @@ const createNew = async (req, res, next) => {
   }
 };
 
-const deleteItem = async (req, res, next) => {
+const deleteCardItem = async (req, res, next) => {
   const correctCondition = Joi.object({
     id: Joi.string()
       .required()
@@ -68,6 +68,6 @@ const updateCard = async (req, res, next) => {
 
 export const cardValidation = {
   createNew,
-  deleteItem,
+  deleteCardItem,
   updateCard,
 };
