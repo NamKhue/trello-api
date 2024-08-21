@@ -3,7 +3,7 @@ import express from "express";
 import { authenticateJWT } from "~/middlewares/authenticateJWT";
 import {
   authorizeRoleBoardForBoardUser,
-  authorizeRoleCard,
+  authorizeRoleCardAndBoard,
 } from "~/middlewares/authorizeRole";
 
 import { ROLE_TYPES } from "~/utils/constants";
@@ -21,10 +21,23 @@ Router.post(
   cardController.createNew
 );
 
+Router.post(
+  "/addUserIntoCard/:id",
+  authenticateJWT,
+  authorizeRoleCardAndBoard,
+  cardController.addUserIntoCard
+);
+Router.delete(
+  "/removeUserFromCard/:id",
+  authenticateJWT,
+  authorizeRoleCardAndBoard,
+  cardController.removeUserFromCard
+);
+
 Router.put(
   "/:id",
   authenticateJWT,
-  // authorizeRoleCard,
+  authorizeRoleCardAndBoard,
   cardValidation.updateCard,
   cardController.updateCard
 );
@@ -32,9 +45,9 @@ Router.put(
 Router.delete(
   "/:id",
   authenticateJWT,
-  // authorizeRoleCard([ROLE_TYPES.CREATOR, ROLE_TYPES.OWNER]),
-  cardValidation.deleteItem,
-  cardController.deleteItem
+  authorizeRoleCardAndBoard,
+  cardValidation.deleteCardItem,
+  cardController.deleteCardItem
 );
 
 export const cardRoute = Router;

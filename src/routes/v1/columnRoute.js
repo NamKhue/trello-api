@@ -33,8 +33,8 @@ Router.delete(
   "/:id",
   authenticateJWT,
   authorizeRoleColumn([ROLE_TYPES.CREATOR, ROLE_TYPES.OWNER]),
-  columnValidation.deleteItem,
-  columnController.deleteItem
+  columnValidation.deleteColumnItem,
+  columnController.deleteColumnItem
 );
 
 export const columnRoute = Router;

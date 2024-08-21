@@ -10,6 +10,7 @@ export const env = {
   FRONTEND_HOST: process.env.FRONTEND_HOST,
   FRONTEND_PORT: process.env.FRONTEND_PORT,
 
+  PORT_MAILTRAP: process.env.PORT_MAILTRAP,
   USER_MAILTRAP: process.env.USER_MAILTRAP,
   PWD_MAILTRAP: process.env.PWD_MAILTRAP,
 

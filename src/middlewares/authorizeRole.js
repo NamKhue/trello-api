@@ -1,13 +1,12 @@
-// middleware/authorizeRole.js
 const { ObjectId } = require("mongodb");
-
 import { StatusCodes } from "http-status-codes";
+
 import { GET_DB } from "~/config/mongodb";
+// import { ROLE_TYPES } from "~/utils/constants";
 
 import { boardUserModel } from "~/models/boardUserModel";
 import { cardModel } from "~/models/cardModel";
 import { columnModel } from "~/models/columnModel";
-// import { cardUserModel } from "~/models/cardUserModel";
 
 export const authorizeRoleBoard = (roles) => {
   return async (req, res, next) => {
@@ -100,38 +99,57 @@ export const authorizeRoleColumn = (roles) => {
   };
 };
 
-export const authorizeRoleCard = () => {
-  return async (req, res, next) => {
-    const { userId } = req.user;
-    const cardId = req.params.id;
-    const boardId = req.body.boardId;
+export const authorizeRoleCardAndBoard = async (req, res, next) => {
+  const userId = req.user.userId;
+  const cardId = req.params.id;
+  const boardId = req.body.boardId;
 
-    try {
-      const targetCard = await GET_DB()
-        .collection(cardModel.CARD_COLLECTION_NAME)
-        .findOne({
-          _id: new ObjectId(cardId),
-          boardId: new ObjectId(boardId),
-        });
-
-      let isMember = false;
-      targetCard.members.map((member) => {
-        if (member.userId == userId) {
-          isMember = true;
-        }
+  try {
+    // Fetch card details
+    const targetCard = await GET_DB()
+      .collection(cardModel.CARD_COLLECTION_NAME)
+      .findOne({
+        _id: new ObjectId(cardId),
+        // boardId: new ObjectId(boardId),
       });
 
-      if (!isMember) {
-        return res
-          .status(StatusCodes.FORBIDDEN)
-          .json({ message: "Stop! You don't have enough permission." });
-      }
-      next();
-    } catch (error) {
-      console.error("Error authorizing roles:", error);
-      res
-        .status(StatusCodes.INTERNAL_SERVER_ERROR)
-        .json({ message: "Internal server error" });
+    if (!targetCard) {
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ message: "Card is not found." });
     }
-  };
+
+    // Check if the user is a member of the card
+    const isCardMember = targetCard.members.some(
+      (member) => member.userId.toString() === userId
+    );
+
+    // Fetch board details to check creator & owner
+    const boardUser = await GET_DB()
+      .collection(boardUserModel.BOARD_USER_COLLECTION_NAME)
+      .findOne({
+        boardId: new ObjectId(boardId || targetCard.boardId.toString()),
+        userId: new ObjectId(userId),
+      });
+
+    if (!boardUser) {
+      return res
+        .status(StatusCodes.FORBIDDEN)
+        .json({ message: "You don't have permission to access this board." });
+    }
+
+    // Check if user is a member or assignee of the card, or the creator & owner of the board
+    if (!isCardMember && !["creator", "owner"].includes(boardUser.role)) {
+      return res
+        .status(StatusCodes.FORBIDDEN)
+        .json({ message: "You don't have permission to modify this card." });
+    }
+
+    next();
+  } catch (error) {
+    console.error("Error authorizing roles:", error);
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ message: "Internal server error" });
+  }
 };

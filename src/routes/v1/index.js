@@ -2,6 +2,9 @@ import express from "express";
 import { StatusCodes } from "http-status-codes";
 
 import { userRoute } from "~/routes/v1/userRoute";
+import { invitationRoute } from "~/routes/v1/invitationRoute";
+// import { emailRoute } from "~/routes/v1/emailRoute";
+import { notificationRoute } from "~/routes/v1/notificationRoute";
 import { boardRoute } from "~/routes/v1/boardRoute";
 import { boardUserRoute } from "~/routes/v1/boardUserRoute";
 import { columnRoute } from "~/routes/v1/columnRoute";
@@ -16,6 +19,15 @@ Router.get("/status", (req, res) => {
 
 // user APIs
 Router.use("/user", userRoute);
+
+// invitation APIs
+Router.use("/invitations", invitationRoute);
+
+// // email APIs
+// Router.use("/emails", emailRoute);
+
+// notification APIs
+Router.use("/notifications", notificationRoute);
 
 // board APIs
 Router.use("/boards", boardRoute);

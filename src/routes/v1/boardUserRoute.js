@@ -20,28 +20,7 @@ Router.get("/allMembers", authenticateJWT, boardUserController.getAllMembers);
 
 Router.get("/roleOfBoard", authenticateJWT, boardUserController.getRoleOfBoard);
 
-Router.post(
-  "/invite",
-  authenticateJWT,
-  authorizeRoleBoardForBoardUser([ROLE_TYPES.CREATOR, ROLE_TYPES.OWNER]),
-  boardUserController.inviteUser
-);
-Router.get(
-  "/accept-invitation",
-  authenticateJWT,
-  boardUserController.acceptInvitation
-);
-Router.get(
-  "/reject-invitation",
-  authenticateJWT,
-  boardUserController.declineInvitation
-);
-
-Router.post(
-  "/add-user",
-  // authenticateJWT,
-  boardUserController.addUser
-);
+Router.post("/add-user", boardUserController.addUser);
 Router.post(
   "/remove-user",
   authenticateJWT,
@@ -52,7 +31,7 @@ Router.post(
 Router.post(
   "/changeRole",
   authenticateJWT,
-  // authorizeRoleBoardForBoardUser([ROLE_TYPES.CREATOR, ROLE_TYPES.OWNER]),
+  authorizeRoleBoardForBoardUser([ROLE_TYPES.CREATOR, ROLE_TYPES.OWNER]),
   boardUserValidation.validateRoleChange,
   boardUserController.changeRole
 );

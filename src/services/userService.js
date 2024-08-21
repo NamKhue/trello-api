@@ -2,18 +2,14 @@ import { env } from "~/config/environment";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { StatusCodes } from "http-status-codes";
-import crypto from "crypto";
-
-import nodemailer from "nodemailer";
 
 import ApiError from "~/utils/ApiError";
 
 import { userModel } from "~/models/userModel";
-import { boardModel } from "~/models/boardModel";
-import { invitationModel } from "~/models/invitationModel";
 
 const JWT_SECRET = env.JWT_SECRET;
 
+// ================================================================================================================
 const register = async (reqBody) => {
   const { username, email, password } = reqBody;
 
@@ -50,6 +46,7 @@ const register = async (reqBody) => {
   return { token, user: { username, email } };
 };
 
+// ================================================================================================================
 const authenticateUser = async (reqBody) => {
   const { email, password } = reqBody;
 
@@ -73,6 +70,7 @@ const getAllUsers = async () => {
   }
 };
 
+// ================================================================================================================
 const getUserById = async (userId) => {
   try {
     const user = await userModel.findOneById(userId);
@@ -87,6 +85,7 @@ const getUserById = async (userId) => {
   }
 };
 
+// ================================================================================================================
 const update = async (userId, reqBody) => {
   const { username, password } = reqBody;
 
@@ -130,68 +129,11 @@ const update = async (userId, reqBody) => {
   }
 };
 
-const sendInvitationEmail = async (
-  inviterID,
-  inviterEmail,
-  recipientEmail,
-  boardId,
-  token
-) => {
-  try {
-    const transporter = nodemailer.createTransport({
-      host: "sandbox.smtp.mailtrap.io",
-      port: 2525,
-      auth: {
-        user: env.USER_MAILTRAP,
-        pass: env.PWD_MAILTRAP,
-      },
-    });
-
-    const targetBoard = await boardModel.getBoardById(inviterID, boardId);
-    const invitationLink = `http://${env.FRONTEND_HOST}:${env.FRONTEND_PORT}/accept-invitation?token=${token}`;
-    const messageEmail = `You have been invited to join my board - ${targetBoard.title.toUpperCase()}. Please join and follow this link:\n ${invitationLink}`;
-    const subjectTitle = "Board Invitation";
-
-    const emailData = {
-      from: inviterEmail,
-      to: recipientEmail,
-      subject: subjectTitle,
-      text: messageEmail,
-    };
-
-    await transporter.sendMail(emailData);
-  } catch (error) {
-    throw error;
-  }
-};
-
-const generateToken = () => {
-  return crypto.randomBytes(16).toString("hex");
-};
-
-const storePendingInvitation = async (inviterId, recipientEmail, boardId) => {
-  try {
-    const token = generateToken();
-
-    await invitationModel.createInvitation(
-      inviterId,
-      recipientEmail,
-      boardId,
-      token
-    );
-
-    return token;
-  } catch (error) {
-    throw error;
-  }
-};
-
+// ================================================================================================================
 export const userService = {
   register,
   authenticateUser,
   getAllUsers,
   getUserById,
   update,
-  sendInvitationEmail,
-  storePendingInvitation,
 };

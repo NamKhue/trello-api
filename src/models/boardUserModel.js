@@ -7,6 +7,8 @@ import { ROLE_TYPES } from "~/utils/constants";
 
 import { boardModel } from "./boardModel";
 import { userModel } from "./userModel";
+import { columnModel } from "./columnModel";
+import { cardModel } from "./cardModel";
 
 // ================================================================================================================
 // xác định những Fields mà chúng ta không muốn cho phép cập nhật trong hàm update()
@@ -101,6 +103,8 @@ const getBoardsByMemberRole = async (userId) => {
 
 // ================================================================================================================
 const findOneById = async (boardUserId) => {
+  boardUserId = boardUserId.toString();
+
   try {
     const result = await GET_DB()
       .collection(BOARD_USER_COLLECTION_NAME)
@@ -212,13 +216,7 @@ const getUserFromBoardUsers = async (boardId) => {
           },
         },
       ])
-      .toArray((err, result) => {
-        if (err) {
-          console.error("Error fetching users:", err);
-        } else {
-          console.log("Users:", result);
-        }
-      });
+      .toArray();
 
     return listOfMembers;
   } catch (error) {
@@ -241,7 +239,7 @@ const updateBoardUser = async (boardId, userId, role) => {
           $set: { role: role },
         }
       );
-    return result.modifiedCount > 0;
+    return result;
   } catch (error) {
     throw new Error(error);
   }
@@ -277,8 +275,6 @@ const validateInviteUser = Joi.object({
 
 // INVITE MEMBER
 const inviteUserToBoard = async (inviterId, inviteData) => {
-  console.log(``);
-
   // Validate inviteData
   const { error, value } = validateInviteUser.validate(inviteData, {
     abortEarly: false,
@@ -372,8 +368,8 @@ const removeUserFromBoard = async (removerId, removeData) => {
     );
   }
 
-  console.log("boardId ", boardId);
-  console.log("userId ", userId);
+  // console.log("boardId ", boardId);
+  // console.log("userId ", userId);
 
   // Ensure the user to be removed is not the creator of the board
   const userRole = await GET_DB()
@@ -404,6 +400,31 @@ const removeUserFromBoard = async (removerId, removeData) => {
       "User is not found in the board or already removed before."
     );
   }
+
+  // Retrieve column IDs from the board
+  const columns = await GET_DB()
+    .collection(columnModel.COLUMN_COLLECTION_NAME)
+    .find({ boardId: new ObjectId(boardId) })
+    .toArray();
+  const columnIds = columns.map((column) => new ObjectId(column._id));
+
+  // Retrieve card IDs from cards
+  const cards = await GET_DB()
+    .collection(cardModel.CARD_COLLECTION_NAME)
+    .find({ columnId: { $in: columnIds }, boardId: new ObjectId(boardId) })
+    .toArray();
+  const cardIds = cards.map((card) => new ObjectId(card._id));
+
+  // Update cards to remove user
+  await GET_DB()
+    .collection(cardModel.CARD_COLLECTION_NAME)
+    .updateMany(
+      {
+        _id: { $in: cardIds },
+        members: { $elemMatch: { userId: new ObjectId(userId) } },
+      },
+      { $pull: { members: { userId: new ObjectId(userId) } } }
+    );
 
   return {
     removeUserFromBoardResult: "User is removed from this board successfully.",
@@ -472,6 +493,7 @@ const changeUserRole = async (invokerId, roleChangeData) => {
   return { boardId, userId, role };
 };
 
+// ================================================================================================================
 export const boardUserModel = {
   BOARD_USER_COLLECTION_NAME,
   BOARD_USER_COLLECTION_SCHEMA,
