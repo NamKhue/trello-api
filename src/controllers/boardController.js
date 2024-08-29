@@ -133,15 +133,15 @@ const deleteBoard = async (req, res, next) => {
   const { id } = req.params;
 
   try {
-    const deletedBoard = await boardService.deleteBoard(userId, id);
+    const resDeletedBoard = await boardService.deleteBoard(userId, id);
 
-    if (!deletedBoard) {
+    if (!resDeletedBoard) {
       return res
         .status(StatusCodes.NOT_FOUND)
         .json({ message: "Board not found or not authorized" });
     }
 
-    res.status(StatusCodes.OK).json(deletedBoard);
+    res.status(StatusCodes.OK).json(resDeletedBoard);
   } catch (error) {
     next(error);
   }

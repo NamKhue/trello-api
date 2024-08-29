@@ -91,10 +91,17 @@ const createNotification = async (notificationData) => {
               notificationData.objectId
             );
 
-            notifyMessage = `The card ${targetCard.title.toUpperCase()} that you are the participant, has been removed by ${
-              targetActor.username.charAt(0).toUpperCase() +
-              targetActor.username.slice(1)
-            }.`;
+            if (notificationData.notifyForCreator) {
+              notifyMessage = `The card ${targetCard.title.toUpperCase()} that you are creator, has been removed by ${
+                targetActor.username.charAt(0).toUpperCase() +
+                targetActor.username.slice(1)
+              }.`;
+            } else {
+              notifyMessage = `The card ${targetCard.title.toUpperCase()} that you are the participant, has been removed by ${
+                targetActor.username.charAt(0).toUpperCase() +
+                targetActor.username.slice(1)
+              }.`;
+            }
           } else if (
             notificationData.from === NOTIFICATION_CONSTANTS.FROM.BOARD
           ) {
@@ -102,10 +109,17 @@ const createNotification = async (notificationData) => {
               notificationData.objectId
             );
 
-            notifyMessage = `The board ${targetBoard.title.toUpperCase()} that you are the participant, has been removed by ${
-              targetActor.username.charAt(0).toUpperCase() +
-              targetActor.username.slice(1)
-            }.`;
+            if (notificationData.notifyForCreator) {
+              notifyMessage = `The board ${targetBoard.title.toUpperCase()} that you are the creator, has been removed by ${
+                targetActor.username.charAt(0).toUpperCase() +
+                targetActor.username.slice(1)
+              }.`;
+            } else {
+              notifyMessage = `The board ${targetBoard.title.toUpperCase()} that you are the participant, has been removed by ${
+                targetActor.username.charAt(0).toUpperCase() +
+                targetActor.username.slice(1)
+              }.`;
+            }
           }
         } else if (
           notificationData.actorId === notificationData.impactResistantId
@@ -115,7 +129,11 @@ const createNotification = async (notificationData) => {
               notificationData.objectId
             );
 
-            notifyMessage = `You've just removed the card ${targetCard.title.toUpperCase()} that you are the participant.`;
+            if (notificationData.notifyForCreator) {
+              notifyMessage = `You've just removed the card ${targetCard.title.toUpperCase()} that you are the creator.`;
+            } else {
+              notifyMessage = `You've just removed the card ${targetCard.title.toUpperCase()} that you are the participant.`;
+            }
           } else if (
             notificationData.from === NOTIFICATION_CONSTANTS.FROM.BOARD
           ) {
@@ -123,7 +141,11 @@ const createNotification = async (notificationData) => {
               notificationData.objectId
             );
 
-            notifyMessage = `You've just removed the board ${targetBoard.title.toUpperCase()} that you are the participant.`;
+            if (notificationData.notifyForCreator) {
+              notifyMessage = `You've just removed the board ${targetBoard.title.toUpperCase()} that you are the creator.`;
+            } else {
+              notifyMessage = `You've just removed the board ${targetBoard.title.toUpperCase()} that you are the participant.`;
+            }
           }
         }
 
@@ -154,10 +176,17 @@ const createNotification = async (notificationData) => {
           notificationData.objectId
         );
 
-        notifyMessage = `${
-          targetActor.username.charAt(0).toUpperCase() +
-          targetActor.username.slice(1)
-        } ${notificationData.response.toLowerCase()} your invitation to join into board ${targetBoard.title.toUpperCase()}`;
+        if (notificationData.via) {
+          notifyMessage = `${
+            targetActor.username.charAt(0).toUpperCase() +
+            targetActor.username.slice(1)
+          } has joined into your board ${targetBoard.title.toUpperCase()} via your invitation link`;
+        } else if (notificationData.response) {
+          notifyMessage = `${
+            targetActor.username.charAt(0).toUpperCase() +
+            targetActor.username.slice(1)
+          } ${notificationData.response.toLowerCase()} your invitation to join into board ${targetBoard.title.toUpperCase()}`;
+        }
 
         break;
       }
@@ -406,12 +435,13 @@ const deleteDeadlineNotifications = async (cardId, members) => {
 };
 
 // =====================================================================================================
-const deleteCardNotificationForMembersInCard = async (
+const deleteNotificationForMembers = async (
   userId,
-  cardId,
-  members
+  objectId,
+  members,
+  typeOfObject
 ) => {
-  if (!cardId || !members || !Array.isArray(members)) {
+  if (!objectId || !members || !Array.isArray(members)) {
     throw new Error("Invalid arguments provided.");
   }
 
@@ -429,9 +459,9 @@ const deleteCardNotificationForMembersInCard = async (
     notificationService.createNotification({
       actorId: userId,
       impactResistantId: memberId,
-      objectId: cardId,
+      objectId: objectId,
       type: NOTIFICATION_CONSTANTS.TYPE.DELETE,
-      from: NOTIFICATION_CONSTANTS.FROM.CARD,
+      from: typeOfObject,
     })
   );
 
@@ -446,7 +476,12 @@ const deleteCardNotificationForMembersInCard = async (
 };
 
 // =====================================================================================================
-const deleteCardNotificationForCreator = async (actorId, creatorId, cardId) => {
+const deleteNotificationForCreator = async (
+  actorId,
+  creatorId,
+  cardId,
+  typeOfDeletingObject
+) => {
   try {
     const responseDeleteCardNotificationForCreator =
       await notificationService.createNotification({
@@ -454,8 +489,8 @@ const deleteCardNotificationForCreator = async (actorId, creatorId, cardId) => {
         impactResistantId: creatorId,
         objectId: cardId,
         type: NOTIFICATION_CONSTANTS.TYPE.DELETE,
-        from: NOTIFICATION_CONSTANTS.FROM.CARD,
-        notifyForCardCreator: true,
+        from: typeOfDeletingObject,
+        notifyForCreator: true,
       });
 
     return responseDeleteCardNotificationForCreator;
@@ -497,8 +532,8 @@ export const notificationService = {
   getNotifications,
   createListDeadlineNotifications,
   deleteDeadlineNotifications,
-  deleteCardNotificationForMembersInCard,
-  deleteCardNotificationForCreator,
+  deleteNotificationForMembers,
+  deleteNotificationForCreator,
   deleteSingleNoti,
   deleteAllNotifications,
 };

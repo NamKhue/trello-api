@@ -305,6 +305,24 @@ const deleteManyByColumnId = async (columnId) => {
   }
 };
 
+// =============================================================================================================================
+const findAllCardsByBoardId = async (boardId) => {
+  boardId = boardId.toString();
+
+  try {
+    const allCardsOfBoard = await GET_DB()
+      .collection(CARD_COLLECTION_NAME)
+      .find({ boardId: new ObjectId(boardId) })
+      .toArray();
+
+    return allCardsOfBoard;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// =============================================================================================================================
+// =============================================================================================================================
 export const cardModel = {
   CARD_COLLECTION_NAME,
   CARD_COLLECTION_SCHEMA,
@@ -316,4 +334,5 @@ export const cardModel = {
   removeUserFromCard,
   deleteOneById,
   deleteManyByColumnId,
+  findAllCardsByBoardId,
 };

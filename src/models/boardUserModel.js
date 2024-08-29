@@ -120,12 +120,31 @@ const findOneById = async (boardUserId) => {
 
 // ================================================================================================================
 const findByUserIdAndBoardId = async (boardId, userId) => {
+  boardId = boardId.toString();
+  userId = userId.toString();
+
   try {
     const result = await GET_DB()
       .collection(BOARD_USER_COLLECTION_NAME)
       .findOne({
         boardId: new ObjectId(boardId),
         userId: new ObjectId(userId),
+      });
+
+    return result;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+// ================================================================================================================
+const findCreatorOfBoard = async (boardId) => {
+  try {
+    const result = await GET_DB()
+      .collection(BOARD_USER_COLLECTION_NAME)
+      .findOne({
+        boardId: new ObjectId(boardId),
+        role: ROLE_TYPES.CREATOR,
       });
 
     return result;
@@ -225,6 +244,24 @@ const getUserFromBoardUsers = async (boardId) => {
 };
 
 // ================================================================================================================
+const getAllMembersFromBoard = async (boardId) => {
+  boardId = boardId.toString();
+
+  try {
+    const listOfAllMembers = await GET_DB()
+      .collection(BOARD_USER_COLLECTION_NAME)
+      .find({
+        boardId: new ObjectId(boardId),
+      })
+      .toArray();
+
+    return listOfAllMembers;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+// ================================================================================================================
 const updateBoardUser = async (boardId, userId, role) => {
   try {
     const result = await GET_DB()
@@ -254,6 +291,10 @@ const getRoleOfBoard = async (userId, boardId) => {
         userId: new ObjectId(userId),
         boardId: new ObjectId(boardId),
       });
+
+    if (!targetBoardUser) {
+      throw new Error("This user is not a member of this board.");
+    }
 
     return targetBoardUser.role;
   } catch (error) {
@@ -501,9 +542,11 @@ export const boardUserModel = {
   getBoardsByMemberRole,
   findOneById,
   findByUserIdAndBoardId,
+  findCreatorOfBoard,
   createBoardUser,
   getBoardFromBoardUsers,
   getUserFromBoardUsers,
+  getAllMembersFromBoard,
   updateBoardUser,
   getRoleOfBoard,
   inviteUserToBoard,

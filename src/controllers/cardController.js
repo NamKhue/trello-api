@@ -76,6 +76,7 @@ const deleteCardItem = async (req, res, next) => {
   try {
     const userId = req.user.userId;
     const cardId = req.params.id;
+
     const updatedCard = await cardService.deleteCardItem(userId, cardId);
 
     res.status(StatusCodes.OK).json(updatedCard);

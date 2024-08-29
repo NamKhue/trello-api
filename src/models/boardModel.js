@@ -408,7 +408,7 @@ const updateBoard = async (userId, boardId, updateData) => {
 //   }
 // };
 
-const deleteBoard = async (userId, boardId) => {
+const deleteBoard = async (actorId, boardId) => {
   try {
     // Find all columns related to the board
     const columns = await GET_DB()
@@ -437,7 +437,7 @@ const deleteBoard = async (userId, boardId) => {
       .collection(boardUserModel.BOARD_USER_COLLECTION_NAME)
       .findOne({
         boardId: new ObjectId(boardId),
-        userId: new ObjectId(userId),
+        userId: new ObjectId(actorId),
         role: { $in: [ROLE_TYPES.OWNER, ROLE_TYPES.CREATOR] },
       });
 

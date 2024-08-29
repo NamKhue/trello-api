@@ -3,7 +3,7 @@ import express from "express";
 import { authenticateJWT } from "~/middlewares/authenticateJWT";
 import {
   authorizeRoleBoardForBoardUser,
-  authorizeRoleColumn,
+  authorizeRoleInBoardViaColumnId,
 } from "~/middlewares/authorizeRole";
 
 import { ROLE_TYPES } from "~/utils/constants";
@@ -24,7 +24,7 @@ Router.post(
 Router.put(
   "/:id",
   authenticateJWT,
-  authorizeRoleColumn([ROLE_TYPES.CREATOR, ROLE_TYPES.OWNER]),
+  authorizeRoleInBoardViaColumnId([ROLE_TYPES.CREATOR, ROLE_TYPES.OWNER]),
   columnValidation.update,
   columnController.update
 );
@@ -32,7 +32,7 @@ Router.put(
 Router.delete(
   "/:id",
   authenticateJWT,
-  authorizeRoleColumn([ROLE_TYPES.CREATOR, ROLE_TYPES.OWNER]),
+  authorizeRoleInBoardViaColumnId([ROLE_TYPES.CREATOR, ROLE_TYPES.OWNER]),
   columnValidation.deleteColumnItem,
   columnController.deleteColumnItem
 );

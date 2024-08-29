@@ -26,7 +26,8 @@ const INVITATION_COLLECTION_SCHEMA = Joi.object({
   recipientId: Joi.string()
     .required()
     .pattern(OBJECT_ID_RULE)
-    .message(OBJECT_ID_RULE_MESSAGE),
+    .message(OBJECT_ID_RULE_MESSAGE)
+    .allow(null),
   boardId: Joi.string()
     .required()
     .pattern(OBJECT_ID_RULE)
@@ -37,8 +38,12 @@ const INVITATION_COLLECTION_SCHEMA = Joi.object({
       INVITATION_STATUS.ACCEPTED,
       INVITATION_STATUS.REJECTED
     )
-    .required(),
+    .required()
+    .allow(null),
+
   token: Joi.string().required(),
+
+  isPublic: Joi.boolean().default(false).required(),
 
   createdAt: Joi.date().timestamp("javascript").default(Date.now),
   updatedAt: Joi.date().timestamp("javascript").default(null),
@@ -46,16 +51,25 @@ const INVITATION_COLLECTION_SCHEMA = Joi.object({
 });
 
 // ================================================================================================================
-const createInvitation = async (inviterId, recipientId, boardId, token) => {
+const createInvitation = async (
+  inviterId,
+  recipientId,
+  boardId,
+  token,
+  isPublic,
+  invitationLink
+) => {
   try {
     const result = await GET_DB()
       .collection(INVITATION_COLLECTION_NAME)
       .insertOne({
         inviterId: new ObjectId(inviterId),
-        recipientId: new ObjectId(recipientId),
+        recipientId: !isPublic ? new ObjectId(recipientId) : null,
         boardId: new ObjectId(boardId),
-        status: INVITATION_STATUS.PENDING,
+        status: !isPublic ? INVITATION_STATUS.PENDING : null,
         token: token,
+        isPublic: isPublic,
+        invitationLink: invitationLink,
         createdAt: Date.now(),
         updatedAt: null,
       });
@@ -137,6 +151,38 @@ const updateStatusInvitation = async (token, status) => {
 };
 
 // ================================================================================================================
+const deleteInvitationLinkForPublic = async (token) => {
+  await GET_DB().collection(INVITATION_COLLECTION_NAME).deleteOne({ token });
+};
+
+// ================================================================================================================
+const findPublicInvitationViaBoardId = async (boardId) => {
+  boardId = boardId.toString();
+
+  const result = await GET_DB()
+    .collection(INVITATION_COLLECTION_NAME)
+    .findOne({
+      boardId: new ObjectId(boardId),
+      isPublic: true,
+    });
+
+  return result;
+};
+
+// ================================================================================================================
+const deleteAllInvitationsViaBoardId = async (boardId) => {
+  boardId = boardId.toString();
+
+  const result = await GET_DB()
+    .collection(INVITATION_COLLECTION_NAME)
+    .deleteMany({
+      boardId: new ObjectId(boardId),
+    });
+
+  return result;
+};
+
+// ================================================================================================================
 export const invitationModel = {
   INVITATION_COLLECTION_NAME,
   INVITATION_COLLECTION_SCHEMA,
@@ -147,4 +193,7 @@ export const invitationModel = {
   // updateStatusInvitationToAccepted,
   // updateStatusInvitationToRejected,
   updateStatusInvitation,
+  deleteInvitationLinkForPublic,
+  findPublicInvitationViaBoardId,
+  deleteAllInvitationsViaBoardId,
 };

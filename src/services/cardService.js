@@ -8,7 +8,6 @@ import { columnModel } from "~/models/columnModel";
 import { notificationService } from "./notificationService";
 import { NOTIFICATION_CONSTANTS } from "~/utils/constants";
 import { notificationModel } from "~/models/notificationModel";
-import { boardModel } from "~/models/boardModel";
 
 // =============================================================================================================================
 const createNew = async (creatorId, reqBody) => {
@@ -187,22 +186,24 @@ const deleteCardItem = async (actorId, cardId) => {
     );
 
     // send noti to all members of this card
-    await notificationService.deleteCardNotificationForMembersInCard(
+    await notificationService.deleteNotificationForMembers(
       actorId,
       cardId,
-      targetCard.members
+      targetCard.members,
+      NOTIFICATION_CONSTANTS.FROM.CARD
     );
 
-    // fetch all deleteCardNotificationForMembersInCard
+    // fetch all deleteNotificationForMembers
     let listResponseDeleteCardNotificationForMembersInCard = [];
 
     for (const member of targetCard.members) {
       const responseDeleteCardNotificationForMembersInCard =
-        await notificationModel.findOneByActorAndImpactResistantAndObjectBasedOnType(
+        await notificationModel.findOneByActorAndImpactResistantAndObjectBasedOnTypeOfNotiAndTypeOfObject(
           actorId,
           member.userId,
           cardId,
-          NOTIFICATION_CONSTANTS.TYPE.DELETE
+          NOTIFICATION_CONSTANTS.TYPE.DELETE,
+          NOTIFICATION_CONSTANTS.FROM.CARD
         );
 
       listResponseDeleteCardNotificationForMembersInCard.push(
@@ -210,14 +211,14 @@ const deleteCardItem = async (actorId, cardId) => {
       );
     }
 
-    // // send noti to the creator of board contains the card
-    // // const targetBoardCreator = await boardModel.findOneById(targetCard.boardId);
-    // const responseDeleteCardNotificationForCreator =
-    //   await notificationService.deleteCardNotificationForCreator(
-    //     actorId,
-    //     targetCard.creatorId,
-    //     cardId
-    //   );
+    // send noti to the creator of board contains the card
+    const responseDeleteCardNotificationForCreator =
+      await notificationService.deleteNotificationForCreator(
+        actorId,
+        targetCard.creatorId,
+        cardId,
+        NOTIFICATION_CONSTANTS.FROM.CARD
+      );
 
     // xóa card
     await cardModel.deleteOneById(cardId);
@@ -228,13 +229,14 @@ const deleteCardItem = async (actorId, cardId) => {
     return {
       deleteCardResult: "This card have been deleted successfully!",
       listResponseDeleteCardNotificationForMembersInCard,
-      // responseDeleteCardNotificationForCreator,
+      responseDeleteCardNotificationForCreator,
     };
   } catch (error) {
     throw error;
   }
 };
 
+// =============================================================================================================================
 // =============================================================================================================================
 export const cardService = {
   createNew,
