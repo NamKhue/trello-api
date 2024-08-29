@@ -26,6 +26,48 @@ const findInvitation = async (invitationData) => {
   }
 };
 
+// =====================================================================================================
+const findPublicInvitationViaBoardId = async (boardId) => {
+  try {
+    const resInvitation = await invitationModel.findPublicInvitationViaBoardId(
+      boardId
+    );
+
+    return resInvitation;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// ================================================================================================================
+const generateInvitationLinkForPublic = async (boardId, inviterId) => {
+  try {
+    // create new invitation
+    const newInvitation = await storePendingInvitation(
+      inviterId,
+      null,
+      boardId,
+      true
+    );
+    const invitationLink = newInvitation.invitationLink;
+
+    return invitationLink;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// ================================================================================================================
+const deleteInvitationLinkForPublic = async (token) => {
+  try {
+    await invitationModel.deleteInvitationLinkForPublic(token);
+
+    return { message: "Successfully remove link" };
+  } catch (error) {
+    throw error;
+  }
+};
+
 // ================================================================================================================
 const inviteUserToBoard = async (
   inviterId,
@@ -34,11 +76,12 @@ const inviteUserToBoard = async (
   boardId
 ) => {
   try {
-    // send email
+    // create new invitation
     const newInvitation = await storePendingInvitation(
       inviterId,
       recipientId,
-      boardId
+      boardId,
+      false
     );
 
     const targetInviter = await userModel.findOneById(inviterId);
@@ -111,15 +154,24 @@ const generateToken = () => {
 };
 
 // ================================================================================================================
-const storePendingInvitation = async (inviterId, recipientId, boardId) => {
+const storePendingInvitation = async (
+  inviterId,
+  recipientId,
+  boardId,
+  isPublic
+) => {
   try {
     const token = generateToken();
+
+    const invitationLink = `http://${env.FRONTEND_HOST}:${env.FRONTEND_PORT}/accept-invitation?token=${token}`;
 
     const createdInvitation = await invitationModel.createInvitation(
       inviterId,
       recipientId,
       boardId,
-      token
+      token,
+      isPublic,
+      invitationLink
     );
 
     // lấy bản ghi board sau khi gọi
@@ -170,6 +222,25 @@ const acceptInvitation = async (invitation) => {
 };
 
 // ================================================================================================================
+const acceptInvitationViaLink = async (invitation, recipientId) => {
+  try {
+    // create new noti to send to the inviter
+    const notiAcceptInvitationViaLink =
+      await notificationService.createNotification({
+        actorId: recipientId,
+        impactResistantId: invitation.inviterId,
+        objectId: invitation.boardId,
+        type: NOTIFICATION_CONSTANTS.TYPE.RESPONSE_INVITATION,
+        via: NOTIFICATION_CONSTANTS.VIA.LINK,
+      });
+
+    return { notiAcceptInvitationViaLink };
+  } catch (error) {
+    throw error;
+  }
+};
+
+// ================================================================================================================
 const declineInvitation = async (invitation) => {
   try {
     // create new noti to send to the inviter
@@ -208,9 +279,13 @@ const declineInvitation = async (invitation) => {
 // =====================================================================================================
 export const invitationService = {
   findInvitation,
+  findPublicInvitationViaBoardId,
+  generateInvitationLinkForPublic,
+  deleteInvitationLinkForPublic,
   inviteUserToBoard,
   sendInvitationEmail,
   storePendingInvitation,
   acceptInvitation,
+  acceptInvitationViaLink,
   declineInvitation,
 };

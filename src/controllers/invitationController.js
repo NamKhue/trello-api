@@ -34,6 +34,53 @@ const findInvitation = async (req, res, next) => {
 };
 
 // ================================================================================================================
+const findPublicInvitation = async (req, res, next) => {
+  try {
+    const targetInvitation =
+      await invitationModel.findPublicInvitationViaBoardId(req.params.id);
+
+    return res.status(StatusCodes.OK).json(targetInvitation);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ================================================================================================================
+const generateInvitationLinkForPublic = async (req, res, next) => {
+  const inviterId = req.user.userId;
+
+  let boardId = req.params.id;
+  boardId = boardId.toString();
+
+  try {
+    const resInvitationLink =
+      await invitationService.generateInvitationLinkForPublic(
+        boardId,
+        inviterId
+      );
+
+    res.status(StatusCodes.OK).send(resInvitationLink);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ================================================================================================================
+const deleteInvitationLinkForPublic = async (req, res, next) => {
+  let token = req.params.id;
+  token = token.toString();
+
+  try {
+    const resDeleteInvitationLink =
+      await invitationService.deleteInvitationLinkForPublic(token);
+
+    res.status(StatusCodes.OK).send(resDeleteInvitationLink);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ================================================================================================================
 const inviteUserIntoBoard = async (req, res, next) => {
   const inviterId = req.user.userId;
   const { boardId, email: recipientEmail } = req.body;
@@ -68,7 +115,8 @@ const inviteUserIntoBoard = async (req, res, next) => {
 
 // ================================================================================================================
 const acceptInvitation = async (req, res, next) => {
-  if (!req.user.userId) {
+  const recipientId = req.user.userId;
+  if (!recipientId) {
     return res.status(StatusCodes.BAD_REQUEST).send("You need to log in.");
   }
 
@@ -76,10 +124,6 @@ const acceptInvitation = async (req, res, next) => {
   // console.log(
   //   "🚀 ~ file: invitationController.js:76 ~ acceptInvitation ~ tokenInvitation:",
   //   tokenInvitation
-  // );
-
-  // const targetInvitation = await invitationModel.findInvitationViaId(
-  //   invitationId
   // );
 
   if (!tokenInvitation) {
@@ -92,10 +136,25 @@ const acceptInvitation = async (req, res, next) => {
     const targetInvitation = await invitationModel.findInvitationViaToken(
       tokenInvitation
     );
-    // console.log(
-    //   "🚀 ~ file: invitationController.js:95 ~ acceptInvitation ~ targetInvitation:",
-    //   targetInvitation
-    // );
+
+    if (!targetInvitation.isPublic) {
+      if (targetInvitation.recipientId.toString() !== recipientId) {
+        return res.status(StatusCodes.BAD_REQUEST).send({
+          message: `Sorry. This invitation is not for you`,
+        });
+      }
+    }
+
+    const targetBoardUser = await boardUserModel.findByUserIdAndBoardId(
+      targetInvitation.boardId,
+      recipientId
+    );
+
+    if (targetBoardUser) {
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .send({ message: "You are already a member of this board." });
+    }
 
     if (!targetInvitation) {
       return res
@@ -103,23 +162,33 @@ const acceptInvitation = async (req, res, next) => {
         .send({ message: "This invitation is invalid or expired." });
     }
 
-    if (targetInvitation.status !== INVITATION_STATUS.PENDING) {
-      return res.status(StatusCodes.BAD_REQUEST).send({
-        message: `The status of this invitation is already ${targetInvitation.status}`,
-      });
+    if (!targetInvitation.isPublic) {
+      if (targetInvitation.status !== INVITATION_STATUS.PENDING) {
+        return res.status(StatusCodes.BAD_REQUEST).send({
+          message: `The status of this invitation is already ${targetInvitation.status}`,
+        });
+      }
     }
 
     // Add user to board_users collection
     await boardUserService.createBoardUser(
       targetInvitation.boardId,
-      req.user.userId,
+      recipientId,
       ROLE_TYPES.MEMBER
     );
 
     // handle accept
-    const notiAcceptInvitation = await invitationService.acceptInvitation(
-      targetInvitation
-    );
+    let notiAcceptInvitation;
+    if (!targetInvitation.isPublic) {
+      notiAcceptInvitation = await invitationService.acceptInvitation(
+        targetInvitation
+      );
+    } else {
+      notiAcceptInvitation = await invitationService.acceptInvitationViaLink(
+        targetInvitation,
+        recipientId
+      );
+    }
 
     res.status(StatusCodes.OK).send(notiAcceptInvitation);
   } catch (error) {
@@ -173,6 +242,9 @@ const declineInvitation = async (req, res, next) => {
 // ================================================================================================================
 export const invitationController = {
   findInvitation,
+  findPublicInvitation,
+  generateInvitationLinkForPublic,
+  deleteInvitationLinkForPublic,
   inviteUserIntoBoard,
   acceptInvitation,
   declineInvitation,

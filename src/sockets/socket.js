@@ -2,8 +2,6 @@ import { Server as SocketIOServer } from "socket.io";
 
 import { corsOptions } from "~/config/cors";
 
-import { notificationService } from "~/services/notificationService";
-
 const io = new SocketIOServer({
   cors: corsOptions,
 });
@@ -78,12 +76,25 @@ io.on("connection", (socket) => {
   // ============================================================================
   // BOARD
   // add new board in homepage
-  socket.on("add-new-board", (userId, boardId) => {
+  // socket.on("accept-joining-new-board", (userId, boardId) => {
+  socket.on("accept-joining-new-board", (userId) => {
     const userSocketId = userSocketMap[userId];
 
     if (userSocketId) {
-      io.to(userSocketId).emit("add-new-board", boardId);
+      io.to(userSocketId).emit("accept-joining-new-board");
+      // io.to(userSocketId).emit("accept-joining-new-board", boardId);
     }
+  });
+
+  // delete board
+  socket.on("delete-board", (boardId, userId) => {
+    const userSocketId = userSocketMap[userId];
+
+    // // if member is in the deleting board
+    // io.to(boardId).emit("delete-board", boardId, userId);
+
+    // if member is in homepage
+    io.to(userSocketId).emit("delete-board", boardId, userId);
   });
 
   // add new user in members component in board page
@@ -101,7 +112,7 @@ io.on("connection", (socket) => {
     const userSocketId = userSocketMap[userId];
 
     if (userSocketId) {
-      io.to(userSocketId).emit("change-role-of-user");
+      io.to(userSocketId).emit("change-role-of-user", userId);
     }
   });
 

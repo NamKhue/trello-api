@@ -4,12 +4,16 @@ import { cloneDeep } from "lodash";
 import { slugify } from "~/utils/formatters";
 import ApiError from "~/utils/ApiError";
 
+import { NOTIFICATION_CONSTANTS } from "~/utils/constants";
+
+import { notificationService } from "./notificationService";
+
+import { boardUserModel } from "~/models/boardUserModel";
 import { boardModel } from "~/models/boardModel";
 import { columnModel } from "~/models/columnModel";
 import { cardModel } from "~/models/cardModel";
-import { notificationService } from "./notificationService";
-import { NOTIFICATION_CONSTANTS } from "~/utils/constants";
-import { boardUserService } from "./boardUserService";
+import { notificationModel } from "~/models/notificationModel";
+import { invitationModel } from "~/models/invitationModel";
 
 // ================================================================================================================
 const getAllBoards = async (userId) => {
@@ -162,32 +166,78 @@ const updateBoard = async (userId, boardId, reqBody) => {
 };
 
 // ================================================================================================================
-const deleteBoard = async (userId, boardId) => {
+const deleteBoard = async (actorId, boardId) => {
   try {
-    // delete board
-    await boardModel.deleteBoard(userId, boardId);
+    // delete all invitations in board (include public or private)
+    await invitationModel.deleteAllInvitationsViaBoardId(boardId);
 
-    // // find all members in board
-    // const listMembersInBoard = await boardUserService.getAllMembers(boardId);
+    // find all cardIds via columnIds
+    const cardsInBoard = await cardModel.findAllCardsByBoardId(boardId);
 
-    // let listNotiDeleteBoard = [];
+    // find all cards have deadline and member to delete all deadline notis
+    for (const card of cardsInBoard) {
+      if (card.deadlineAt != "" && card.members.length > 0) {
+        await notificationService.deleteDeadlineNotifications(
+          card._id,
+          card.members
+        );
+      }
+    }
 
-    // for (const member of listMembersInBoard) {
-    //   // send the notification to that user
-    //   const notiDeleteBoard = await notificationService.createNotification({
-    //     actorId: userId,
-    //     impactResistantId: member.userId,
-    //     objectId: boardId,
-    //     type: NOTIFICATION_CONSTANTS.TYPE.DELETE,
-    //   });
+    // send noti to the creator of board contains the board
+    // find creator of board
+    const targetBoardUser = await boardUserModel.findCreatorOfBoard(boardId);
 
-    //   listNotiDeleteBoard.push(notiDeleteBoard);
-    // }
+    const responseDeleteBoardNotificationForCreator =
+      await notificationService.deleteNotificationForCreator(
+        actorId,
+        targetBoardUser.userId,
+        boardId,
+        NOTIFICATION_CONSTANTS.FROM.BOARD
+      );
 
-    // return {
-    //   deleteBoardResult: "Board has been removed successfully!",
-    //   listNotiDeleteBoard,
-    // };
+    // send noti to all members of board
+    // find all members of board
+    const listOfAllMembers = await boardUserModel.getAllMembersFromBoard(
+      boardId
+    );
+    const listOfAllMembersExceptCreatorOfBoard = listOfAllMembers.filter(
+      (member) => member.userId.toString() != targetBoardUser.userId.toString()
+    );
+
+    await notificationService.deleteNotificationForMembers(
+      actorId,
+      boardId,
+      listOfAllMembersExceptCreatorOfBoard,
+      NOTIFICATION_CONSTANTS.FROM.BOARD
+    );
+
+    // fetch all deleteBoardNotificationForMembersInBoard
+    let listResponseDeleteBoardNotificationForMembersInBoard = [];
+
+    for (const member of listOfAllMembersExceptCreatorOfBoard) {
+      const responseDeleteBoardNotificationForMembersInBoard =
+        await notificationModel.findOneByActorAndImpactResistantAndObjectBasedOnTypeOfNotiAndTypeOfObject(
+          actorId,
+          member.userId,
+          boardId,
+          NOTIFICATION_CONSTANTS.TYPE.DELETE,
+          NOTIFICATION_CONSTANTS.FROM.BOARD
+        );
+
+      listResponseDeleteBoardNotificationForMembersInBoard.push(
+        responseDeleteBoardNotificationForMembersInBoard
+      );
+    }
+
+    // delete board & columns & cards
+    await boardModel.deleteBoard(actorId, boardId);
+
+    return {
+      deleteBoardResult: "Board has been removed successfully!",
+      listResponseDeleteBoardNotificationForMembersInBoard,
+      responseDeleteBoardNotificationForCreator,
+    };
   } catch (error) {
     return new Error(error);
   }

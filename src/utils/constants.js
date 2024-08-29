@@ -27,6 +27,9 @@ export const INVITATION_STATUS = {
 };
 
 export const NOTIFICATION_CONSTANTS = {
+  VIA: {
+    LINK: "LINK",
+  },
   TYPE: {
     DELETE: "DELETE",
     REMOVE: "REMOVE",

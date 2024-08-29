@@ -8,9 +8,26 @@ import { ROLE_TYPES } from "~/utils/constants";
 
 const Router = express.Router();
 
-// Router.get("/", authenticateJWT, invitationController.findInvitation);
-
 Router.get("/:id", authenticateJWT, invitationController.findInvitation);
+Router.get(
+  "/public-invitation/:id",
+  authenticateJWT,
+  invitationController.findPublicInvitation
+);
+
+Router.get(
+  "/generate-invitation-link/:id",
+  authenticateJWT,
+  authorizeRoleBoardForBoardUser([ROLE_TYPES.CREATOR, ROLE_TYPES.OWNER]),
+  invitationController.generateInvitationLinkForPublic
+);
+
+Router.delete(
+  "/:id",
+  authenticateJWT,
+  authorizeRoleBoardForBoardUser([ROLE_TYPES.CREATOR, ROLE_TYPES.OWNER]),
+  invitationController.deleteInvitationLinkForPublic
+);
 
 Router.post(
   "/invite",

@@ -4,9 +4,11 @@ import { ObjectId } from "mongodb";
 
 import { GET_DB } from "~/config/mongodb";
 
+// =============================================================================================================================
 // xác định những Fields mà chúng ta không muốn cho phép cập nhật trong hàm update()
 const INVALID_UPDATE_FIELDS = ["_id", "createdAt", "boardId"];
 
+// =============================================================================================================================
 // Define Collection (name & schema)
 const COLUMN_COLLECTION_NAME = "columns";
 const COLUMN_COLLECTION_SCHEMA = Joi.object({
@@ -31,6 +33,7 @@ const validateBeforeCreating = async (data) => {
   });
 };
 
+// =============================================================================================================================
 const createNew = async (data) => {
   try {
     const validData = await validateBeforeCreating(data);
@@ -51,6 +54,7 @@ const createNew = async (data) => {
   }
 };
 
+// =============================================================================================================================
 const findOneById = async (columnId) => {
   try {
     const result = await GET_DB()
@@ -65,6 +69,7 @@ const findOneById = async (columnId) => {
   }
 };
 
+// =============================================================================================================================
 const update = async (columnId, updateData) => {
   try {
     // lọc ra những field khong được phép cập nhật
@@ -105,6 +110,7 @@ const update = async (columnId, updateData) => {
   }
 };
 
+// =============================================================================================================================
 const deleteOneById = async (columnId) => {
   try {
     const result = await GET_DB()
@@ -121,6 +127,7 @@ const deleteOneById = async (columnId) => {
   }
 };
 
+// =============================================================================================================================
 // đẩy (push) giá trị cardId vào mảng cardOrderIds
 const pushCardOrderIds = async (card) => {
   try {
@@ -148,6 +155,7 @@ const pushCardOrderIds = async (card) => {
   }
 };
 
+// =============================================================================================================================
 // lấy giá trị cardId ra khỏi mảng cardOrderIds và xóa đi
 const pullCardOrderIds = async (card) => {
   try {
@@ -176,6 +184,8 @@ const pullCardOrderIds = async (card) => {
   }
 };
 
+// =============================================================================================================================
+// =============================================================================================================================
 export const columnModel = {
   COLUMN_COLLECTION_NAME,
   COLUMN_COLLECTION_SCHEMA,

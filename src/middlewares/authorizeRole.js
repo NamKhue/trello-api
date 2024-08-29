@@ -2,7 +2,7 @@ const { ObjectId } = require("mongodb");
 import { StatusCodes } from "http-status-codes";
 
 import { GET_DB } from "~/config/mongodb";
-// import { ROLE_TYPES } from "~/utils/constants";
+import { boardModel } from "~/models/boardModel";
 
 import { boardUserModel } from "~/models/boardUserModel";
 import { cardModel } from "~/models/cardModel";
@@ -11,38 +11,20 @@ import { columnModel } from "~/models/columnModel";
 export const authorizeRoleBoard = (roles) => {
   return async (req, res, next) => {
     const { userId } = req.user;
-    const { id } = req.params;
+    let boardId = req.params.id;
+    boardId = boardId.toString();
 
     try {
-      const boardUser = await GET_DB()
-        .collection(boardUserModel.BOARD_USER_COLLECTION_NAME)
-        .findOne({
-          boardId: new ObjectId(id),
-          userId: new ObjectId(userId),
-        });
+      const targetBoard = await GET_DB()
+        .collection(boardModel.BOARD_COLLECTION_NAME)
+        .findOne({ _id: new ObjectId(boardId) });
 
-      if (!boardUser || !roles.includes(boardUser.role)) {
+      if (!targetBoard) {
         return res
-          .status(StatusCodes.FORBIDDEN)
-          .json({ message: "Stop! You don't have enough permission." });
+          .status(StatusCodes.NOT_FOUND)
+          .json({ message: "This board is not found or deleted." });
       }
 
-      next();
-    } catch (error) {
-      console.error("Error authorizing roles:", error);
-      res
-        .status(StatusCodes.INTERNAL_SERVER_ERROR)
-        .json({ message: "Internal server error" });
-    }
-  };
-};
-
-export const authorizeRoleBoardForBoardUser = (roles) => {
-  return async (req, res, next) => {
-    const { userId } = req.user;
-    const boardId = req.query.boardId || req.body.boardId || req.params.id;
-
-    try {
       const boardUser = await GET_DB()
         .collection(boardUserModel.BOARD_USER_COLLECTION_NAME)
         .findOne({
@@ -66,7 +48,47 @@ export const authorizeRoleBoardForBoardUser = (roles) => {
   };
 };
 
-export const authorizeRoleColumn = (roles) => {
+export const authorizeRoleBoardForBoardUser = (roles) => {
+  return async (req, res, next) => {
+    const { userId } = req.user;
+    let boardId = req.query.boardId || req.body.boardId || req.params.id;
+    boardId = boardId.toString();
+
+    try {
+      const targetBoard = await GET_DB()
+        .collection(boardModel.BOARD_COLLECTION_NAME)
+        .findOne({ _id: new ObjectId(boardId) });
+
+      if (!targetBoard) {
+        return res
+          .status(StatusCodes.NOT_FOUND)
+          .json({ message: "This board is not found or deleted." });
+      }
+
+      const boardUser = await GET_DB()
+        .collection(boardUserModel.BOARD_USER_COLLECTION_NAME)
+        .findOne({
+          boardId: new ObjectId(boardId),
+          userId: new ObjectId(userId),
+        });
+
+      if (!boardUser || !roles.includes(boardUser.role)) {
+        return res
+          .status(StatusCodes.FORBIDDEN)
+          .json({ message: "Stop! You don't have enough permission." });
+      }
+
+      next();
+    } catch (error) {
+      console.error("Error authorizing roles:", error);
+      res
+        .status(StatusCodes.INTERNAL_SERVER_ERROR)
+        .json({ message: "Internal server error" });
+    }
+  };
+};
+
+export const authorizeRoleInBoardViaColumnId = (roles) => {
   return async (req, res, next) => {
     const { userId } = req.user;
     const columnId = req.params.id;
@@ -102,9 +124,20 @@ export const authorizeRoleColumn = (roles) => {
 export const authorizeRoleCardAndBoard = async (req, res, next) => {
   const userId = req.user.userId;
   const cardId = req.params.id;
-  const boardId = req.body.boardId;
+  let boardId = req.query.boardId;
+  boardId = boardId.toString();
 
   try {
+    const targetBoard = await GET_DB()
+      .collection(boardModel.BOARD_COLLECTION_NAME)
+      .findOne({ _id: new ObjectId(boardId) });
+
+    if (!targetBoard) {
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ message: "This board is not found or deleted." });
+    }
+
     // Fetch card details
     const targetCard = await GET_DB()
       .collection(cardModel.CARD_COLLECTION_NAME)

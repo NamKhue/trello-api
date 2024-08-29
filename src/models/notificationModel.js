@@ -172,31 +172,28 @@ const findDeadlineOneByActorAndImpactResistantAndObject = async (
   }
 };
 
-const findOneByActorAndImpactResistantAndObjectBasedOnType = async (
-  actorId,
-  impactResistantId,
-  objectId,
-  type
-) => {
-  actorId = actorId.toString();
-  impactResistantId = impactResistantId.toString();
-  objectId = objectId.toString();
+const findOneByActorAndImpactResistantAndObjectBasedOnTypeOfNotiAndTypeOfObject =
+  async (actorId, impactResistantId, objectId, typeOfNoti, typeOfObject) => {
+    actorId = actorId.toString();
+    impactResistantId = impactResistantId.toString();
+    objectId = objectId.toString();
 
-  try {
-    const result = await GET_DB()
-      .collection(NOTIFICATION_COLLECTION_NAME)
-      .findOne({
-        actorId: new ObjectId(actorId),
-        impactResistantId: new ObjectId(impactResistantId),
-        objectId: new ObjectId(objectId),
-        type: type,
-      });
+    try {
+      const result = await GET_DB()
+        .collection(NOTIFICATION_COLLECTION_NAME)
+        .findOne({
+          actorId: new ObjectId(actorId),
+          impactResistantId: new ObjectId(impactResistantId),
+          objectId: new ObjectId(objectId),
+          type: typeOfNoti,
+          from: typeOfObject,
+        });
 
-    return result;
-  } catch (error) {
-    throw error;
-  }
-};
+      return result;
+    } catch (error) {
+      throw error;
+    }
+  };
 
 // =====================================================================================================
 const markAllAsRead = async (userId) => {
@@ -277,6 +274,17 @@ function isDeadlineInPast(deadlineAt) {
   return deadlineDate < now;
 }
 
+function calculateNotificationTime(deadlineAt, notifyBefore, notifyUnit) {
+  // Parse the deadlineAt into a DateTime object
+  const deadline = DateTime.fromFormat(deadlineAt, "yyyy-MM-dd HH:mm");
+
+  // Subtract the notifyBefore duration from the deadline
+  const notificationTime = deadline.minus({ [notifyUnit]: notifyBefore });
+
+  // Format the notification time into 'YYYY-MM-DD HH:mm'
+  return notificationTime.toFormat("yyyy-MM-dd HH:mm");
+}
+
 // full details about deadline
 const updateDeadlineNotification = async (updateDeadlineData) => {
   //
@@ -307,14 +315,29 @@ const updateDeadlineNotification = async (updateDeadlineData) => {
     return;
   }
 
-  // const oldNoti = targetNoti;
-  // const newNoti = updateDeadlineData;
+  // check deadlineAt and the time to notify based on notifyBefore & notifyUnit & deadlineAt
   if (!isDeadlineInPast(updateDeadlineData.deadlineAt)) {
-    updateDeadlineData = {
-      ...updateDeadlineData,
-      doneShownDeadlineNoti: false,
-      markIsRead: false,
-    };
+    if (
+      isDeadlineInPast(
+        calculateNotificationTime(
+          updateDeadlineData.deadlineAt,
+          updateDeadlineData.notifyBefore,
+          updateDeadlineData.notifyUnit
+        )
+      )
+    ) {
+      updateDeadlineData = {
+        ...updateDeadlineData,
+        doneShownDeadlineNoti: true,
+        markIsRead: true,
+      };
+    } else {
+      updateDeadlineData = {
+        ...updateDeadlineData,
+        doneShownDeadlineNoti: false,
+        markIsRead: false,
+      };
+    }
   } else {
     updateDeadlineData = {
       ...updateDeadlineData,
@@ -574,7 +597,7 @@ export const notificationModel = {
   findOneById,
   findOneByActorAndImpactResistantAndObject,
   findDeadlineOneByActorAndImpactResistantAndObject,
-  findOneByActorAndImpactResistantAndObjectBasedOnType,
+  findOneByActorAndImpactResistantAndObjectBasedOnTypeOfNotiAndTypeOfObject,
   markAllAsRead,
   markAsReadSingleNoti,
   updateResponseInvitation,
