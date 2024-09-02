@@ -13,12 +13,11 @@ const createNotification = async (notificationData) => {
   notificationData.objectId = notificationData.objectId.toString();
 
   try {
+    const targetActor = await userService.getUserById(notificationData.actorId);
+
     var notifyMessage = "";
     switch (notificationData.type) {
       case NOTIFICATION_CONSTANTS.TYPE.ADD: {
-        const targetActor = await userService.getUserById(
-          notificationData.actorId
-        );
         const targetCard = await cardModel.findOneById(
           notificationData.objectId
         );
@@ -39,10 +38,6 @@ const createNotification = async (notificationData) => {
       }
 
       case NOTIFICATION_CONSTANTS.TYPE.REMOVE: {
-        const targetActor = await userService.getUserById(
-          notificationData.actorId
-        );
-
         if (notificationData.from === NOTIFICATION_CONSTANTS.FROM.CARD) {
           const targetCard = await cardModel.findOneById(
             notificationData.objectId
@@ -82,10 +77,6 @@ const createNotification = async (notificationData) => {
 
       case NOTIFICATION_CONSTANTS.TYPE.DELETE: {
         if (notificationData.actorId !== notificationData.impactResistantId) {
-          const targetActor = await userService.getUserById(
-            notificationData.actorId
-          );
-
           if (notificationData.from === NOTIFICATION_CONSTANTS.FROM.CARD) {
             const targetCard = await cardModel.findOneById(
               notificationData.objectId
@@ -153,9 +144,6 @@ const createNotification = async (notificationData) => {
       }
 
       case NOTIFICATION_CONSTANTS.TYPE.INVITE: {
-        const targetActor = await userService.getUserById(
-          notificationData.actorId
-        );
         const targetBoard = await boardService.getBoardById(
           notificationData.objectId
         );
@@ -169,9 +157,6 @@ const createNotification = async (notificationData) => {
       }
 
       case NOTIFICATION_CONSTANTS.TYPE.RESPONSE_INVITATION: {
-        const targetActor = await userService.getUserById(
-          notificationData.actorId
-        );
         const targetBoard = await boardService.getBoardById(
           notificationData.objectId
         );
@@ -192,9 +177,6 @@ const createNotification = async (notificationData) => {
       }
 
       case NOTIFICATION_CONSTANTS.TYPE.CHANGE_ROLE: {
-        const targetActor = await userService.getUserById(
-          notificationData.actorId
-        );
         const targetBoard = await boardService.getBoardById(
           notificationData.objectId
         );
@@ -237,6 +219,32 @@ const createNotification = async (notificationData) => {
         break;
       }
 
+      case NOTIFICATION_CONSTANTS.TYPE.COMMENT: {
+        const targetCard = await cardModel.findOneById(
+          notificationData.objectId
+        );
+
+        notifyMessage = `${
+          targetActor.username.charAt(0).toUpperCase() +
+          targetActor.username.slice(1)
+        } has commented in the card ${targetCard.title.toUpperCase()} of board ${targetCard.title.toUpperCase()}`;
+
+        break;
+      }
+
+      case NOTIFICATION_CONSTANTS.TYPE.REPLY: {
+        const targetCard = await cardModel.findOneById(
+          notificationData.objectId
+        );
+
+        notifyMessage = `${
+          targetActor.username.charAt(0).toUpperCase() +
+          targetActor.username.slice(1)
+        } has replied to the original comment of card ${targetCard.title.toUpperCase()} of board ${targetCard.title.toUpperCase()} that you've replied.`;
+
+        break;
+      }
+
       default: {
         notifyMessage = ``;
         break;
@@ -245,6 +253,7 @@ const createNotification = async (notificationData) => {
 
     notificationData = {
       ...notificationData,
+      actorName: targetActor.username,
       notifyMessage: notifyMessage,
       markIsRead: false,
     };
