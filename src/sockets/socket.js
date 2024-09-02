@@ -74,6 +74,35 @@ io.on("connection", (socket) => {
 
   // ============================================================================
   // ============================================================================
+  // COMMENT
+  // new-comment
+  socket.on("new-comment", (boardId, newComment, listNotiAboutNewComment) => {
+    io.to(boardId).emit("new-comment", newComment);
+
+    for (const noti of listNotiAboutNewComment) {
+      const userSocketId = userSocketMap[noti.impactResistantId];
+
+      if (userSocketId) {
+        io.to(userSocketId).emit("noti-receive-new-comment", noti);
+      }
+    }
+  });
+
+  // new-reply
+  socket.on("new-reply", (boardId, newReply, listNotiAboutNewReply) => {
+    io.to(boardId).emit("new-reply", newReply);
+
+    for (const noti of listNotiAboutNewReply) {
+      const userSocketId = userSocketMap[noti.impactResistantId];
+
+      if (userSocketId) {
+        io.to(userSocketId).emit("noti-receive-new-reply", noti);
+      }
+    }
+  });
+
+  // ============================================================================
+  // ============================================================================
   // BOARD
   // add new board in homepage
   // socket.on("accept-joining-new-board", (userId, boardId) => {
