@@ -6,6 +6,8 @@ import { invitationRoute } from "~/routes/v1/invitationRoute";
 // import { emailRoute } from "~/routes/v1/emailRoute";
 import { notificationRoute } from "~/routes/v1/notificationRoute";
 import { commentRoute } from "~/routes/v1/commentRoute";
+import { fileRoute } from "~/routes/v1/fileRoute";
+
 import { boardRoute } from "~/routes/v1/boardRoute";
 import { boardUserRoute } from "~/routes/v1/boardUserRoute";
 import { columnRoute } from "~/routes/v1/columnRoute";
@@ -32,6 +34,9 @@ Router.use("/notifications", notificationRoute);
 
 // comment APIs
 Router.use("/comments", commentRoute);
+
+// file upload APIs
+Router.use("/files", fileRoute);
 
 // board APIs
 Router.use("/boards", boardRoute);

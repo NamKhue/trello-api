@@ -26,6 +26,9 @@ const START_SERVER = () => {
   // enable req.body json data
   app.use(express.json());
 
+  // setup the ability to access upload_files folder
+  app.use(express.static("public/upload_files")); // Serve uploaded files statically
+
   // Setup Socket.IO
   setupSocketIO(server);
 

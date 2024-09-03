@@ -1,9 +1,9 @@
 import express from "express";
 
 import { authenticateJWT } from "~/middlewares/authenticateJWT";
+import { authorizeRoleBoardForBoardUser } from "~/middlewares/authorizeRole";
 
 import { invitationController } from "~/controllers/invitationController";
-import { authorizeRoleBoardForBoardUser } from "~/middlewares/authorizeRole";
 import { ROLE_TYPES } from "~/utils/constants";
 
 const Router = express.Router();
