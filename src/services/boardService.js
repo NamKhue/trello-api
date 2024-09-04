@@ -14,6 +14,7 @@ import { columnModel } from "~/models/columnModel";
 import { cardModel } from "~/models/cardModel";
 import { notificationModel } from "~/models/notificationModel";
 import { invitationModel } from "~/models/invitationModel";
+import { commentModel } from "~/models/commentModel";
 
 // ================================================================================================================
 const getAllBoards = async (userId) => {
@@ -168,6 +169,17 @@ const updateBoard = async (userId, boardId, reqBody) => {
 // ================================================================================================================
 const deleteBoard = async (actorId, boardId) => {
   try {
+    // delete all comments from all cards inside board
+    const targetColumns = await columnModel.findOneByBoardId(boardId);
+
+    // Extract card IDs from columns
+    const cardIds = targetColumns.flatMap((column) => column.cardOrderIds);
+
+    if (cardIds.length > 0) {
+      // Delete all comments related to these card IDs
+      await commentModel.deleteManyFromCardIds(cardIds);
+    }
+
     // delete all invitations in board (include public or private)
     await invitationModel.deleteAllInvitationsViaBoardId(boardId);
 

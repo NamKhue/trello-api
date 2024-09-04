@@ -150,6 +150,38 @@ const findOneById = async (commentId) => {
 };
 
 // ================================================================================================================
+const deleteManyFromCardIds = async (cardIds) => {
+  cardIds = cardIds.map((cardId) => {
+    cardId = cardId.toString();
+    return new ObjectId(cardId);
+  });
+
+  try {
+    const result = await GET_DB()
+      .collection(COMMENT_COLLECTION_NAME)
+      .deleteMany({ cardId: { $in: cardIds } });
+
+    return result;
+  } catch (error) {
+    throw error;
+  }
+};
+
+const deleteManyByCardId = async (cardId) => {
+  cardId = cardId.toString();
+
+  try {
+    const result = await GET_DB()
+      .collection(COMMENT_COLLECTION_NAME)
+      .deleteMany({ cardId: new ObjectId(cardId) });
+
+    return result;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// ================================================================================================================
 export const commentModel = {
   COMMENT_COLLECTION_NAME,
   COMMENT_COLLECTION_SCHEMA,
@@ -157,4 +189,6 @@ export const commentModel = {
   getCommentsViaParentCommentId,
   createComment,
   findOneById,
+  deleteManyFromCardIds,
+  deleteManyByCardId,
 };

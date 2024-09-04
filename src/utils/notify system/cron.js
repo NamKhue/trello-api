@@ -54,11 +54,11 @@ function isWithinNotificationRange(deadlineAt, notifyBefore, notifyUnit) {
 }
 
 export const startCronJobs = () => {
-  // Check for upcoming deadlines based on minute
-  cron.schedule("30 * * * *", async () => {
-    //
-    // // based on second
-    // cron.schedule("*/10 * * * * *", async () => {
+  // // Check for upcoming deadlines based on minute
+  // cron.schedule("30 * * * *", async () => {
+  //
+  // based on second
+  cron.schedule("*/10 * * * * *", async () => {
     //
     console.log("Checking for upcoming deadlines...\n");
 
