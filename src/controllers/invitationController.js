@@ -137,6 +137,12 @@ const acceptInvitation = async (req, res, next) => {
       tokenInvitation
     );
 
+    if (!targetInvitation) {
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .send({ message: "This invitation is invalid or expired." });
+    }
+
     if (!targetInvitation.isPublic) {
       if (targetInvitation.recipientId.toString() !== recipientId) {
         return res.status(StatusCodes.BAD_REQUEST).send({
@@ -154,12 +160,6 @@ const acceptInvitation = async (req, res, next) => {
       return res
         .status(StatusCodes.BAD_REQUEST)
         .send({ message: "You are already a member of this board." });
-    }
-
-    if (!targetInvitation) {
-      return res
-        .status(StatusCodes.BAD_REQUEST)
-        .send({ message: "This invitation is invalid or expired." });
     }
 
     if (!targetInvitation.isPublic) {

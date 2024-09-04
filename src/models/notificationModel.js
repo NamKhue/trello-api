@@ -6,6 +6,8 @@ import { GET_DB } from "~/config/mongodb";
 import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from "~/utils/validators";
 import { CARD_CONSTANTS, NOTIFICATION_CONSTANTS } from "~/utils/constants";
 import { cardModel } from "./cardModel";
+import { userService } from "~/services/userService";
+import { notificationService } from "~/services/notificationService";
 
 // =====================================================================================================
 const NOTIFICATION_COLLECTION_NAME = "notifications";
@@ -288,6 +290,8 @@ function calculateNotificationTime(deadlineAt, notifyBefore, notifyUnit) {
 // full details about deadline
 const updateDeadlineNotification = async (updateDeadlineData) => {
   //
+  const targetActor = await userService.getUserById(updateDeadlineData.actorId);
+  //
   updateDeadlineData.actorId = updateDeadlineData.actorId.toString();
   updateDeadlineData.impactResistantId =
     updateDeadlineData.impactResistantId.toString();
@@ -308,7 +312,7 @@ const updateDeadlineNotification = async (updateDeadlineData) => {
   );
 
   if (!targetNoti) {
-    await createNotification({
+    await notificationService.createNotification({
       ...updateDeadlineData,
       type: NOTIFICATION_CONSTANTS.TYPE.DEADLINE,
     });
@@ -345,6 +349,11 @@ const updateDeadlineNotification = async (updateDeadlineData) => {
       markIsRead: true,
     };
   }
+
+  updateDeadlineData = {
+    ...updateDeadlineData,
+    actorName: targetActor.username,
+  };
 
   const result = await GET_DB()
     .collection(NOTIFICATION_COLLECTION_NAME)

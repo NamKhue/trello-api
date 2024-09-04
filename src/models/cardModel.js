@@ -245,19 +245,14 @@ const addUserIntoCard = async (cardId, assigneeData) => {
 };
 
 // =============================================================================================================================
-const removeUserFromCard = async (cardId, assigneeData) => {
+const removeUserFromCard = async (cardId, assigneeId) => {
   try {
-    assigneeData = {
-      ...assigneeData,
-      userId: new ObjectId(assigneeData.userId),
-    };
-
     const result = await GET_DB()
       .collection(CARD_COLLECTION_NAME)
       .updateOne(
         { _id: new ObjectId(cardId) },
         {
-          $pull: { members: { userId: assigneeData.userId } },
+          $pull: { members: { userId: new ObjectId(assigneeId) } },
           $set: { updatedAt: Date.now() },
         },
         {

@@ -8,6 +8,7 @@ import { columnModel } from "~/models/columnModel";
 import { notificationService } from "./notificationService";
 import { NOTIFICATION_CONSTANTS } from "~/utils/constants";
 import { notificationModel } from "~/models/notificationModel";
+import { commentModel } from "~/models/commentModel";
 
 // =============================================================================================================================
 const createNew = async (creatorId, reqBody) => {
@@ -78,7 +79,7 @@ const addUserIntoCard = async (actorId, cardId, assignee) => {
 // =============================================================================================================================
 const removeUserFromCard = async (actorId, cardId, assignee) => {
   try {
-    await cardModel.removeUserFromCard(cardId, assignee);
+    await cardModel.removeUserFromCard(cardId, assignee.userId);
 
     // send the notification to that user
     const newNoti = await notificationService.createNotification({
@@ -172,6 +173,10 @@ const updateCard = async (cardId, reqBody) => {
 // =============================================================================================================================
 const deleteCardItem = async (actorId, cardId) => {
   try {
+    // delete comments
+    await commentModel.deleteManyByCardId(cardId);
+
+    //
     const targetCard = await cardModel.findOneById(cardId);
     // console.log('targetCard:', targetCard)
 

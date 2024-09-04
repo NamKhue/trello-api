@@ -3,6 +3,7 @@ import { boardUserModel } from "~/models/boardUserModel";
 import { NOTIFICATION_CONSTANTS } from "~/utils/constants";
 
 import { notificationService } from "./notificationService";
+import { cardModel } from "~/models/cardModel";
 
 // ================================================================================================================
 const getBoardsByOwnerRole = async (userId) => {
@@ -76,6 +77,25 @@ const removeUserFromBoard = async (removerId, removeData) => {
   try {
     // remove user from board
     await boardUserModel.removeUserFromBoard(removerId, removeData);
+
+    // remove user from all cards that user is assignee
+    // Step 1: Find all cards related to the board
+    const targetCards = await cardModel.findAllCardsByBoardId(
+      removeData.boardId
+    );
+
+    // Step 2: Remove members from each card
+    for (const card of targetCards) {
+      let newCardMemberIds = card.members.filter(
+        (member) => member.userId != removeData.userId
+      );
+
+      // Update the card by setting its members to an empty array
+      await cardModel.updateCard(card._id, {
+        ...card,
+        members: newCardMemberIds,
+      });
+    }
 
     // send the notification to that user
     const newNoti = await notificationService.createNotification({

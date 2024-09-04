@@ -27,13 +27,13 @@ const COLUMN_COLLECTION_SCHEMA = Joi.object({
   _destroy: Joi.boolean().default(false),
 });
 
+// =============================================================================================================================
 const validateBeforeCreating = async (data) => {
   return await COLUMN_COLLECTION_SCHEMA.validateAsync(data, {
     abortEarly: false,
   });
 };
 
-// =============================================================================================================================
 const createNew = async (data) => {
   try {
     const validData = await validateBeforeCreating(data);
@@ -62,6 +62,23 @@ const findOneById = async (columnId) => {
       .findOne({
         _id: new ObjectId(columnId),
       });
+
+    return result;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+const findOneByBoardId = async (boardId) => {
+  boardId = boardId.toString();
+
+  try {
+    const result = await GET_DB()
+      .collection(COLUMN_COLLECTION_NAME)
+      .find({
+        boardId: new ObjectId(boardId),
+      })
+      .toArray();
 
     return result;
   } catch (error) {
@@ -191,6 +208,7 @@ export const columnModel = {
   COLUMN_COLLECTION_SCHEMA,
   createNew,
   findOneById,
+  findOneByBoardId,
   update,
   deleteOneById,
   pushCardOrderIds,
