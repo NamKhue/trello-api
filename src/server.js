@@ -40,29 +40,29 @@ const START_SERVER = () => {
 
   server.listen(env.APP_PORT, env.APP_HOST, () => {
     console.log(
-      `Hello im ${env.AUTHOR}, I am running at http://${env.APP_HOST}:${env.APP_PORT}/`
+      `Hello, i'm ${env.AUTHOR}, I am running at http://${env.APP_HOST}:${env.APP_PORT}/`
     );
     console.log("");
   });
 
   // clean up trc khi dừng server
   exitHook(() => {
-    console.log("server is shutted down");
+    console.log("Server is shutted down");
 
     CLOSE_DB();
 
-    console.log("disconnected to mongoDB");
+    console.log("Disconnected to mongoDB");
   });
 };
 
 // chỉ khi kết nối thành công tới db thì mới start server từ phía back-end lên
 (async () => {
   try {
-    console.log("connecting to mongoDB cloud atlas");
+    console.log("Connecting to mongoDB cloud atlas ...");
 
     await CONNECT_DB();
 
-    console.log("connected to mongoDB cloud atlas");
+    console.log("Successfully connected to mongoDB cloud atlas");
 
     // cần check xem đã tồn tại port hay chưa
     // nếu đã tồn tại thì cần kill port. và sau đó mới khởi tạo

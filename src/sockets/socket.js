@@ -157,6 +157,11 @@ io.on("connection", (socket) => {
     io.to(boardId).emit("update-board", newBoard);
   });
 
+  // update column
+  socket.on("update-column", (boardId, newColumn) => {
+    io.to(boardId).emit("update-column", newColumn);
+  });
+
   // ============================================================================
   // ============================================================================
   // CARD
