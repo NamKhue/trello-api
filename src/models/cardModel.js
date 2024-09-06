@@ -26,7 +26,7 @@ const CARD_COLLECTION_SCHEMA = Joi.object({
     .pattern(OBJECT_ID_RULE)
     .message(OBJECT_ID_RULE_MESSAGE),
 
-  title: Joi.string().required().min(3).max(50).trim().strict(),
+  title: Joi.string().required().min(3).max(150).trim().strict(),
   description: Joi.string().default(""),
 
   status: Joi.string().default(""),
