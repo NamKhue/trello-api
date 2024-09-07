@@ -10,7 +10,7 @@ const createNew = async (req, res, next) => {
       .required()
       .pattern(OBJECT_ID_RULE)
       .message(OBJECT_ID_RULE_MESSAGE),
-    title: Joi.string().required().min(3).max(50).trim().strict(),
+    title: Joi.string().required().min(3).max(150).trim().strict(),
   });
 
   try {
@@ -28,7 +28,7 @@ const update = async (req, res, next) => {
   const correctCondition = Joi.object({
     // nếu làm tính năng di chuyển sang board khác thì mới thêm validate (nghĩ là không cần tính năng này đối với proj hiện tại)
     // boardId: Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE),
-    title: Joi.string().min(3).max(50).trim().strict(),
+    title: Joi.string().min(3).max(150).trim().strict(),
     cardOrderIds: Joi.array().items(
       Joi.string().pattern(OBJECT_ID_RULE).message(OBJECT_ID_RULE_MESSAGE)
     ),

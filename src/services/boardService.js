@@ -1,7 +1,7 @@
 import { StatusCodes } from "http-status-codes";
 import { cloneDeep } from "lodash";
 
-import { slugify } from "~/utils/formatters";
+// import { slugify } from "~/utils/formatters";
 import ApiError from "~/utils/ApiError";
 
 import { NOTIFICATION_CONSTANTS } from "~/utils/constants";
@@ -44,7 +44,7 @@ const createNew = async (userId, boardData) => {
     // xử lý logic data tùy đặc thù dự án
     const newBoard = {
       ...boardData,
-      slug: slugify(boardData.title),
+      // slug: slugify(boardData.title),
       userId: userId,
       createdAt: Date.now(),
     };
