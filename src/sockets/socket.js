@@ -76,17 +76,20 @@ io.on("connection", (socket) => {
   // ============================================================================
   // COMMENT
   // new-comment
-  socket.on("new-comment", (boardId, newComment, listNotiAboutNewComment) => {
-    io.to(boardId).emit("new-comment", newComment);
+  socket.on(
+    "new-comment",
+    (boardId, newComment, listNotiAboutNewComment, personLeaveCommentId) => {
+      io.to(boardId).emit("new-comment", newComment);
 
-    for (const noti of listNotiAboutNewComment) {
-      const userSocketId = userSocketMap[noti.impactResistantId];
+      for (const noti of listNotiAboutNewComment) {
+        const userSocketId = userSocketMap[noti.impactResistantId];
 
-      if (userSocketId) {
-        io.to(userSocketId).emit("noti-receive-new-comment", noti);
+        if (userSocketId && noti.impactResistantId != personLeaveCommentId) {
+          io.to(userSocketId).emit("noti-receive-new-comment", noti);
+        }
       }
     }
-  });
+  );
 
   // new-reply
   socket.on("new-reply", (boardId, newReply, listNotiAboutNewReply) => {

@@ -14,7 +14,7 @@ import { StatusCodes } from "http-status-codes";
 
 // ================================================================================================================
 // xác định những Fields mà chúng ta không muốn cho phép cập nhật trong hàm update()
-const INVALID_UPDATE_FIELDS = ["_id", "createdAt"];
+const INVALID_UPDATE_FIELDS = ["_id", "userId", "createdAt"];
 
 // ================================================================================================================
 // define collection (name & schema)

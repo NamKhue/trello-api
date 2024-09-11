@@ -8,7 +8,7 @@ import { CARD_CONSTANTS } from "~/utils/constants";
 // import { notificationService } from "~/services/notificationService";
 
 // xác định những Fields mà chúng ta không muốn cho phép cập nhật trong hàm update()
-const INVALID_UPDATE_FIELDS = ["_id", "createdAt", "boardId"];
+const INVALID_UPDATE_FIELDS = ["_id", "creatorId", "boardId", "createdAt"];
 
 // Define Collection (name & schema)
 const CARD_COLLECTION_NAME = "cards";
