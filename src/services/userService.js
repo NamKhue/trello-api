@@ -52,7 +52,7 @@ const authenticateUser = async (reqBody) => {
 
   const user = await userModel.findOneByEmail(email);
 
-  if (!user) throw new Error("User is not found");
+  if (!user) throw new Error("You should create a new account");
 
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) throw new Error("Invalid password");
